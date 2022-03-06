@@ -56,8 +56,8 @@ int main( int argc, char *argv[] ) {
   SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
 
   // play audio
-  int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
-  SDL_PauseAudioDevice(deviceId, 0);
+  //int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+  //SDL_PauseAudioDevice(deviceId, 0);
 
   // HUD setup
   SDL_Color color = { 255, 255, 255 };

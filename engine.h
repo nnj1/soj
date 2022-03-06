@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <fstream>
 
@@ -13,6 +14,8 @@
 #include <ctime>     // For the time function
 
 using namespace std;
+
+static const char *MAINTHEME = "assets/main.mp3";
 
 Uint32 changeOpacities(Uint32 interval, void *param);
 
@@ -35,6 +38,9 @@ private:
 
     // recurrent counter for environment animation updates
     SDL_TimerID my_timer_id;
+
+    // mix music object pointer
+    Mix_Music *music;
 
 public:
 
@@ -73,12 +79,33 @@ Engine::Engine(SDL_Renderer *renderer, int width, int height, int scale)
     // sets x,y offset for top left hand corner of viewing window, w and h are useless
     viewport_rect = {5, 5, 0, 0};
     firsttick = SDL_GetTicks();
+
+    // get music set up
+
+    int result = 0;
+    int flags = MIX_INIT_MP3;
+
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        printf("Failed to init SDL\n");
+        exit(1);
+    }
+
+    if (flags != (result = Mix_Init(flags))) {
+        printf("Could not initialize mixer (result: %d).\n", result);
+        printf("Mix_Init: %s\n", Mix_GetError());
+        exit(1);
+    }
+
+    Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 640);
+    music = Mix_LoadMUS(MAINTHEME);
+    Mix_PlayMusic(music, 1);
 }
 
 // Define the destructor.
 Engine::~Engine() {
    // Deallocate the memory that was previously reserved
    SDL_RemoveTimer(my_timer_id);
+   Mix_FreeMusic(music);
 }
 
 // Engine member function
@@ -182,9 +209,20 @@ void Engine::drawFrame()
             pixel_rect.h = mscale;
 
             // get the color based on viewport offset (enables camera movement)!
-            SDL_Color cex = cells.at(y + viewport_rect.y).at(x + viewport_rect.x);
+            SDL_Color cex;
+
+            try {
+                cex = cells.at(y + viewport_rect.y).at(x + viewport_rect.x);
+            }
+            catch (const std::out_of_range& oor) {
+                std::cerr << "Out of Range error: " << oor.what() << '\n';
+                // color out of rangle pixel red
+                cex = SDL_Color{225, 0,0, 225};
+            }
+            
             SDL_SetRenderDrawColor(mrenderer, cex.r, cex.g, cex.b, cex.a); 
             SDL_RenderFillRect(mrenderer, &pixel_rect);
+
         }
     }
 }
