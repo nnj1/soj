@@ -42,7 +42,6 @@ int main( int argc, char *argv[] ) {
   }
 
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
-  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); 
   
   SDL_Init(SDL_INIT_AUDIO);
   
@@ -69,7 +68,6 @@ int main( int argc, char *argv[] ) {
   SDL_Texture * texttexture = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_QueryTexture(texttexture, NULL, NULL, &texW, &texH);
 
-  printf("%d\n", texH);
   SDL_Rect dstrect;
   dstrect.x = 0;
   dstrect.y = 0;
@@ -88,10 +86,9 @@ int main( int argc, char *argv[] ) {
 
   // player (soon to be in engine) 
   SDL_Rect player_rect = {320*2 -8 , 240*2-8, 8, 8};
-  SDL_Rect player_rect2 = {320, 240, 8, 8};
 
   // engine 
-  Engine* newengine = new Engine(1,2,3);
+  Engine* newengine = new Engine(renderer, 640, 480, 8);
 
   while (true)
   {
@@ -117,11 +114,8 @@ int main( int argc, char *argv[] ) {
 
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); 
-    SDL_RenderFillRect(renderer, &player_rect);
-
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); 
-    SDL_RenderFillRect(renderer, &player_rect2);;
+    newengine -> randomColors();
+    newengine -> drawFrame();
 
     // Show the renderer contents
     SDL_RenderPresent(renderer);
