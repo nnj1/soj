@@ -89,6 +89,7 @@ int main( int argc, char *argv[] ) {
 
   // engine 
   Engine* newengine = new Engine(renderer, 640, 480, 8);
+  newengine -> loadMap("maps/test.map");
 
   while (true)
   {
@@ -114,7 +115,6 @@ int main( int argc, char *argv[] ) {
 
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 
-    newengine -> randomColors();
     newengine -> drawFrame();
 
     // Show the renderer contents
