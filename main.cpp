@@ -105,6 +105,7 @@ int main( int argc, char *argv[] ) {
               case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); break;
               case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); break;
               case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); break;
+              
           }
       }
       if (event.type == SDL_QUIT)

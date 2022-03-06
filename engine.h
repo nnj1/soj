@@ -168,7 +168,7 @@ void Engine::drawFrame()
             pixel_rect.w = mscale;
             pixel_rect.h = mscale;
 
-            //get the color based on viewport offset (enables camera movement)!
+            // get the color based on viewport offset (enables camera movement)!
             SDL_Color cex = cells.at(y + viewport_rect.y).at(x + viewport_rect.x);
             SDL_SetRenderDrawColor(mrenderer, cex.r, cex.g, cex.b, cex.a); 
             SDL_RenderFillRect(mrenderer, &pixel_rect);
@@ -243,6 +243,7 @@ void Engine::loadMap(string filename)
 }
 
 
+// only offsets viewport if it's possible!
 void Engine::offset_viewport_rect(int x, int y){
     if (viewport_rect.x + x  >= 0 && viewport_rect.y + y >= 0 
         && viewport_rect.x + x <= (int) mwidth/mscale && viewport_rect.y + y <= (int) mheight/mscale){
