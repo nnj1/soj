@@ -115,13 +115,19 @@ int main( int argc, char *argv[] ) {
 
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 
+    //newengine -> randomOpacities(); 
     newengine -> drawFrame();
+
+    SDL_SetRenderDrawColor(renderer, 225, 0,0, 225);
+    SDL_RenderFillRect(renderer, &player_rect);
 
     // Show the renderer contents
     SDL_RenderPresent(renderer);
   }
 
   // Tidy up
+
+  
   SDL_CloseAudioDevice(deviceId);
   SDL_FreeWAV(wavBuffer);
   SDL_DestroyTexture(texture);

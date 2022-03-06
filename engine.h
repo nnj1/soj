@@ -14,27 +14,38 @@
 
 using namespace std;
 
+Uint32 changeOpacities(Uint32 interval, void *param);
+
 class Engine
 {
 private:
     int mwidth;
     int mheight;
     int mscale;
+    SDL_Rect viewport_rect;
+    vector<vector<char> > mmap;
+    Uint32 firsttick;
+    SDL_TimerID my_timer_id;
 
 public:
     Engine(SDL_Renderer *renderer, int width, int height, int scale);
+    ~Engine();
 
     void SetEngine(SDL_Renderer *renderer, int width, int height, int scale);
     void randomColors();
     void solidColors();
     void drawFrame();
     void flushCells();
+    void randomOpacities();
     vector<vector<char> > readMap(string filename);
     void loadMap(string filename);
 
     int getWidth() { return mwidth; }
     int getHeight() { return mheight; }
     int getScale() { return mscale; }
+    SDL_Rect getViewport_rect() { return viewport_rect; }
+    void setViewport_rect(int x, int y, int w, int h) { viewport_rect = {x, y, w, h}; }
+    void centerViewport_rect();
     SDL_Renderer* mrenderer;
     vector<vector<SDL_Color> > cells;
 };
@@ -43,6 +54,18 @@ public:
 Engine::Engine(SDL_Renderer *renderer, int width, int height, int scale)
 {
     SetEngine(renderer, width, height, scale);
+    // set default viewport_rect to be entire screen! The dimensions provided are in pixels!
+    viewport_rect = {0, 0, (int) width/scale, (int) height/scale};
+    
+
+    //set timer for water animation
+    my_timer_id = SDL_AddTimer(250, changeOpacities, this);
+}
+
+// Define the destructor.
+Engine::~Engine() {
+   // Deallocate the memory that was previously reserved
+   SDL_RemoveTimer(my_timer_id);
 }
 
 // Engine member function
@@ -68,6 +91,19 @@ void Engine::SetEngine(SDL_Renderer *renderer, int width, int height, int scale)
 void Engine::flushCells()
 {
     cells.clear();
+}
+
+void Engine::randomOpacities()
+{
+    for(auto y = 0; y < mmap.size(); ++y)
+    {
+
+        for(auto x = 0; x < mmap[y].size(); ++x) {
+            if(mmap[y][x] == 'W'){
+                cells[y][x].a = rand() % 50 + 205;
+            }
+        }
+    }
 }
 
 void Engine::randomColors()
@@ -117,9 +153,9 @@ void Engine::solidColors()
 
 void Engine::drawFrame()
 {
-    for(auto y = 0; y < cells.size(); ++y)
+    for(auto y = viewport_rect.y; y < viewport_rect.h; ++y)
     {
-        for(auto x = 0; x < cells[y].size(); ++x) {
+        for(auto x = viewport_rect.x; x < viewport_rect.w; ++x) {
             SDL_Rect pixel_rect;
             pixel_rect.x = x*mscale;
             pixel_rect.y = y*mscale;
@@ -152,23 +188,37 @@ vector<vector<char> > Engine::readMap(string filename)
 void Engine::loadMap(string filename)
 {
 
-    vector<vector<char> > map = readMap(filename);
+    mmap = readMap(filename);
 
     // intialize background
     solidColors();
 
     // TODO: MAKE THIS SCALE!
 
-    for(auto y = 0; y < map.size(); ++y)
+    for(auto y = 0; y < mmap.size(); ++y)
     {
-        for(auto x = 0; x < map[y].size(); ++x) {
+        for(auto x = 0; x < mmap[y].size(); ++x) {
             
-            if(map[y][x] != ' '){
-                cells[y][x].r = 255;
+            if(mmap[y][x] == 'G'){
+                cells[y][x].r = 0;
                 cells[y][x].g = 255;
+                cells[y][x].b = 0;
+                cells[y][x].a = 255;
+            }
+            else if(mmap[y][x] == 'W'){
+                cells[y][x].r = 0;
+                cells[y][x].g = 0;
                 cells[y][x].b = 255;
                 cells[y][x].a = 255;
             }
+            // color all else black
+            else if (mmap[y][x] != ' '){
+                cells[y][x].r = 0;
+                cells[y][x].g = 0;
+                cells[y][x].b = 0;
+                cells[y][x].a = 0;
+            }
+            // color all else black
             else{
                 cells[y][x].r = 0;
                 cells[y][x].g = 0;
@@ -179,5 +229,12 @@ void Engine::loadMap(string filename)
     }
 
 }
+
+Uint32 changeOpacities(Uint32 interval, void *param)
+{
+    static_cast<Engine*> (param) -> randomOpacities();
+    return(interval);
+}
+
 
 #endif /* MY_CLASS_H */
