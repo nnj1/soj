@@ -89,6 +89,7 @@ int main( int argc, char *argv[] ) {
 
   // engine 
   Engine* newengine = new Engine(renderer, 640, 480, 8);
+  
   newengine -> loadMap("maps/test.map");
 
   while (true)
@@ -100,10 +101,10 @@ int main( int argc, char *argv[] ) {
       if (event.type == SDL_KEYDOWN){
         switch (event.key.keysym.sym)
           {
-              case SDLK_LEFT:  player_rect.x -= 8; break;
-              case SDLK_RIGHT: player_rect.x += 8; break;
-              case SDLK_UP:    player_rect.y -= 8; break;
-              case SDLK_DOWN:  player_rect.y += 8; break;
+              case SDLK_LEFT:  newengine -> offset_viewport_rect(-1,0); break;
+              case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); break;
+              case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); break;
+              case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); break;
           }
       }
       if (event.type == SDL_QUIT)

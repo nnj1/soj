@@ -22,7 +22,7 @@ private:
     int mwidth;
     int mheight;
     int mscale;
-    SDL_Rect viewport_rect;
+    
     vector<vector<char> > mmap;
     Uint32 firsttick;
     SDL_TimerID my_timer_id;
@@ -30,6 +30,8 @@ private:
 public:
     Engine(SDL_Renderer *renderer, int width, int height, int scale);
     ~Engine();
+
+    SDL_Rect viewport_rect;
 
     void SetEngine(SDL_Renderer *renderer, int width, int height, int scale);
     void randomColors();
@@ -48,18 +50,16 @@ public:
     void centerViewport_rect();
     SDL_Renderer* mrenderer;
     vector<vector<SDL_Color> > cells;
+
+    void offset_viewport_rect(int x, int y);
 };
 
 // Engine constructor
 Engine::Engine(SDL_Renderer *renderer, int width, int height, int scale)
 {
     SetEngine(renderer, width, height, scale);
-    // set default viewport_rect to be entire screen! The dimensions provided are in pixels!
-    viewport_rect = {0, 0, (int) width/scale, (int) height/scale};
-    
-
-    //set timer for water animation
-    my_timer_id = SDL_AddTimer(250, changeOpacities, this);
+    // sets x,y offset for top left hand corner of viewing window, w and h are useless
+    viewport_rect = {5, 5, 0, 0};
 }
 
 // Define the destructor.
@@ -95,12 +95,12 @@ void Engine::flushCells()
 
 void Engine::randomOpacities()
 {
-    for(auto y = 0; y < mmap.size(); ++y)
+    for(auto y = 0; y < cells.size(); ++y)
     {
 
-        for(auto x = 0; x < mmap[y].size(); ++x) {
-            if(mmap[y][x] == 'W'){
-                cells[y][x].a = rand() % 50 + 205;
+        for(auto x = 0; x < cells.at(y).size(); ++x) {
+            if(mmap.at(y).at(x) == 'W'){
+                cells.at(y).at(x).a = rand() % 50 + 205;
             }
         }
     }
@@ -136,10 +136,13 @@ void Engine::solidColors()
 
     flushCells();
 
-    for(int y = 0; y < (int)(mheight/mscale); ++y)
+
+
+    for(int y = 0; y < mmap.size(); ++y)
     {
+        
         vector<SDL_Color> row;
-        for(int x = 0; x < (int)(mwidth/mscale); ++x) {
+        for(int x = 0; x < mmap.at(y).size(); ++x) {
             struct SDL_Color color;
             color.r = 0;
             color.g = 0;
@@ -147,21 +150,27 @@ void Engine::solidColors()
             color.a = 255;
             row.push_back(color);
         }
+
         cells.push_back(row);
     }
+
 }
 
 void Engine::drawFrame()
 {
-    for(auto y = viewport_rect.y; y < viewport_rect.h; ++y)
+    for(auto y = 0; y < (int) mheight/mscale; ++y)
     {
-        for(auto x = viewport_rect.x; x < viewport_rect.w; ++x) {
+        for(auto x = 0; x < (int) mwidth/mscale; ++x) {
+            // generic pixel object
             SDL_Rect pixel_rect;
             pixel_rect.x = x*mscale;
             pixel_rect.y = y*mscale;
             pixel_rect.w = mscale;
             pixel_rect.h = mscale;
-            SDL_SetRenderDrawColor(mrenderer, cells[y][x].r, cells[y][x].g, cells[y][x].b, cells[y][x].a); 
+
+            //get the color based on viewport offset (enables camera movement)!
+            SDL_Color cex = cells.at(y + viewport_rect.y).at(x + viewport_rect.x);
+            SDL_SetRenderDrawColor(mrenderer, cex.r, cex.g, cex.b, cex.a); 
             SDL_RenderFillRect(mrenderer, &pixel_rect);
         }
     }
@@ -197,39 +206,57 @@ void Engine::loadMap(string filename)
 
     for(auto y = 0; y < mmap.size(); ++y)
     {
-        for(auto x = 0; x < mmap[y].size(); ++x) {
+        for(auto x = 0; x < mmap.at(y).size(); ++x) {
             
-            if(mmap[y][x] == 'G'){
-                cells[y][x].r = 0;
-                cells[y][x].g = 255;
-                cells[y][x].b = 0;
-                cells[y][x].a = 255;
+            if(mmap.at(y).at(x) == 'G'){
+                cells.at(y).at(x).r = 0;
+                cells.at(y).at(x).g = 255;
+                cells.at(y).at(x).b = 0;
+                cells.at(y).at(x).a = 255;
             }
-            else if(mmap[y][x] == 'W'){
-                cells[y][x].r = 0;
-                cells[y][x].g = 0;
-                cells[y][x].b = 255;
-                cells[y][x].a = 255;
+            else if(mmap.at(y).at(x) == 'W'){
+                cells.at(y).at(x).r = 0;
+                cells.at(y).at(x).g = 0;
+                cells.at(y).at(x).b = 255;
+                cells.at(y).at(x).a = 255;
             }
             // color all else black
-            else if (mmap[y][x] != ' '){
-                cells[y][x].r = 0;
-                cells[y][x].g = 0;
-                cells[y][x].b = 0;
-                cells[y][x].a = 0;
+            else if (mmap.at(y).at(x) != ' '){
+                cells.at(y).at(x).r = 0;
+                cells.at(y).at(x).g = 0;
+                cells.at(y).at(x).b = 0;
+                cells.at(y).at(x).a = 0;
             }
             // color all else black
             else{
-                cells[y][x].r = 0;
-                cells[y][x].g = 0;
-                cells[y][x].b = 0;
-                cells[y][x].a = 255;
+                cells.at(y).at(x).r = 0;
+                cells.at(y).at(x).g = 0;
+                cells.at(y).at(x).b = 0;
+                cells.at(y).at(x).a = 255;
             }
         }
     }
 
+    //set timer for water animation
+    my_timer_id = SDL_AddTimer(250, changeOpacities, this);
+
 }
 
+
+void Engine::offset_viewport_rect(int x, int y){
+    if (viewport_rect.x + x  >= 0 && viewport_rect.y + y >= 0 
+        && viewport_rect.x + x <= (int) mwidth/mscale && viewport_rect.y + y <= (int) mheight/mscale){
+        viewport_rect.x += x; 
+        viewport_rect.y += y;
+    }
+    else{
+        printf("hit bounds!\n");
+    }
+}
+
+
+
+// not a part of the class, just a callback for recurrent animations
 Uint32 changeOpacities(Uint32 interval, void *param)
 {
     static_cast<Engine*> (param) -> randomOpacities();
