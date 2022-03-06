@@ -83,17 +83,49 @@ int main( int argc, char *argv[] ) {
 
   // 640 x 480 (width and height) 
 
-
   // player (soon to be in engine) 
   SDL_Rect player_rect = {320*2 -8 , 240*2-8, 8, 8};
 
   // engine 
   Engine* newengine = new Engine(renderer, 640, 480, 8);
-  
+
   newengine -> loadMap("maps/test.map");
+
+
+  // splash screen loops
+
+  SDL_Surface * splashimage = IMG_Load("assets/splash.png");
+  SDL_Texture * splashtexture = SDL_CreateTextureFromSurface(renderer, splashimage);
+
+  
+  SDL_SetTextureAlphaMod(splashtexture, 100);
+  Uint32 initTime = SDL_GetTicks();
+
+  while (SDL_GetTicks() - initTime < 5000)
+  { 
+    // Get the next event
+    SDL_Event event;
+    if (SDL_PollEvent(&event))
+    {
+      if (event.type == SDL_KEYDOWN){
+        break;
+      }
+      if (event.type == SDL_QUIT)
+      {
+        // Break out of the loop on quit
+        break;
+      }
+    }
+    // TODO: fade in and fade out effect
+    SDL_RenderCopy(renderer, splashtexture, NULL, NULL);
+    SDL_SetRenderDrawColor(renderer, 225, 0,0, 225);
+    SDL_RenderPresent(renderer);
+
+  }
 
   while (true)
   {
+
     // Get the next event
     SDL_Event event;
     if (SDL_PollEvent(&event))

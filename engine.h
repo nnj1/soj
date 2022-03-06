@@ -19,19 +19,31 @@ Uint32 changeOpacities(Uint32 interval, void *param);
 class Engine
 {
 private:
+
+    // dimensions of window
     int mwidth;
     int mheight;
+
+    // dimensiosn of a single pixel
     int mscale;
+
+    // contains x and y offsets
+    SDL_Rect viewport_rect;
     
+    // contains data loaded from .map file
     vector<vector<char> > mmap;
-    Uint32 firsttick;
+
+    // recurrent counter for environment animation updates
     SDL_TimerID my_timer_id;
 
 public:
+
+    // constructor and deconstructor
     Engine(SDL_Renderer *renderer, int width, int height, int scale);
     ~Engine();
 
-    SDL_Rect viewport_rect;
+    // tick
+    Uint32 firsttick;
 
     void SetEngine(SDL_Renderer *renderer, int width, int height, int scale);
     void randomColors();
@@ -60,6 +72,7 @@ Engine::Engine(SDL_Renderer *renderer, int width, int height, int scale)
     SetEngine(renderer, width, height, scale);
     // sets x,y offset for top left hand corner of viewing window, w and h are useless
     viewport_rect = {5, 5, 0, 0};
+    firsttick = SDL_GetTicks();
 }
 
 // Define the destructor.
@@ -189,7 +202,7 @@ vector<vector<char> > Engine::readMap(string filename)
         map.push_back(linevec);
     }
 
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, ("map: " + filename).c_str(), (to_string(map.size()) + " by " + to_string(map[1].size())).c_str(), NULL);
+    //SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, ("map: " + filename).c_str(), (to_string(map.size()) + " by " + to_string(map[1].size())).c_str(), NULL);
 
     return map;
 }
@@ -254,7 +267,6 @@ void Engine::offset_viewport_rect(int x, int y){
         printf("hit bounds!\n");
     }
 }
-
 
 
 // not a part of the class, just a callback for recurrent animations
