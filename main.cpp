@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include "engine.h"
+#include "entity.h"
 
 using namespace std;
 
@@ -83,14 +84,15 @@ int main( int argc, char *argv[] ) {
 
   // 640 x 480 (width and height) 
 
-  // player (soon to be in engine) 
-  SDL_Rect player_rect = {320*2 -8 , 240*2-8, 8, 8};
-
   // engine 
   Engine* newengine = new Engine(renderer, 640, 480, 8);
 
-  newengine -> loadMap("maps/test.map");
+  // player entitiy
+  Entity player("player", 5, 5, 0.0, 0.0, 0.0, 0.0, {255,0,0,255});
 
+  newengine -> entities.push_back(&player);
+
+  newengine -> loadMap("maps/test.map");
 
   // splash screen loops
 
@@ -137,6 +139,11 @@ int main( int argc, char *argv[] ) {
               case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); break;
               case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); break;
               case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); break;
+
+              case SDLK_w:  player.sety(player.gety() - 1); break;
+              case SDLK_a:  player.setx(player.getx() - 1); break;
+              case SDLK_s:  player.sety(player.gety() + 1); break;
+              case SDLK_d:  player.setx(player.getx() + 1); break;
               
           }
       }
@@ -149,11 +156,11 @@ int main( int argc, char *argv[] ) {
 
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 
-    //newengine -> randomOpacities(); 
+    //newengine -> randomOpacities();
+    newengine -> runPhysics(0.001);
     newengine -> drawFrame();
 
     SDL_SetRenderDrawColor(renderer, 225, 0,0, 225);
-    SDL_RenderFillRect(renderer, &player_rect);
 
     // Show the renderer contents
     SDL_RenderPresent(renderer);
@@ -161,7 +168,6 @@ int main( int argc, char *argv[] ) {
 
   // Tidy up
 
-  
   SDL_CloseAudioDevice(deviceId);
   SDL_FreeWAV(wavBuffer);
   SDL_DestroyTexture(texture);

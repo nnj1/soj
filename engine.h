@@ -13,6 +13,8 @@
 #include <cstdlib>   // rand and srand
 #include <ctime>     // For the time function
 
+#include "entity.h"
+
 using namespace std;
 
 static const char *MAINTHEME = "assets/main.mp3";
@@ -55,6 +57,7 @@ public:
     void randomColors();
     void solidColors();
     void drawFrame();
+    void runPhysics(float deltat);
     void flushCells();
     void randomOpacities();
     vector<vector<char> > readMap(string filename);
@@ -70,6 +73,8 @@ public:
     vector<vector<SDL_Color> > cells;
 
     void offset_viewport_rect(int x, int y);
+
+    vector<Entity*> entities;
 };
 
 // Engine constructor
@@ -176,8 +181,6 @@ void Engine::solidColors()
 
     flushCells();
 
-
-
     for(int y = 0; y < mmap.size(); ++y)
     {
         
@@ -196,8 +199,19 @@ void Engine::solidColors()
 
 }
 
+void Engine::runPhysics(float deltat)
+{
+    for(Entity *i : entities) 
+    {
+       break;
+    }
+}
+
 void Engine::drawFrame()
 {
+
+    // draw background
+
     for(auto y = 0; y < (int) mheight/mscale; ++y)
     {
         for(auto x = 0; x < (int) mwidth/mscale; ++x) {
@@ -224,6 +238,19 @@ void Engine::drawFrame()
             SDL_RenderFillRect(mrenderer, &pixel_rect);
 
         }
+    }
+
+    // draw entities
+    for(Entity *i : entities) 
+    {
+        // generic entity object
+        SDL_Rect entity_rect;
+        entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
+        entity_rect.y = (i -> gety() - viewport_rect.y)*mscale;
+        entity_rect.w = mscale;
+        entity_rect.h = mscale;
+        SDL_SetRenderDrawColor(mrenderer, i -> mcolor.r, i -> mcolor.g, i -> mcolor.b, i -> mcolor.a);
+        SDL_RenderFillRect(mrenderer, &entity_rect);
     }
 }
 
