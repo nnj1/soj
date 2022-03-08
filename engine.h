@@ -253,7 +253,6 @@ void Engine::drawFrame()
         // generic entity object
         SDL_Rect entity_rect;
         entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
-        printf("%f\n", i -> getx());
         //(entities are on flipped y axis!)
         entity_rect.y = mheight - (i -> gety() + viewport_rect.y)*mscale;
         entity_rect.w = mscale;
