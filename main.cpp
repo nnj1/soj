@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
@@ -10,11 +11,11 @@ using namespace std;
 int main( int argc, char *argv[] ) {
 
   SDL_Window *window = SDL_CreateWindow("DANK",
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        SDL_WINDOWPOS_UNDEFINED,
-                                        640,
-                                        480,
-                                        SDL_WINDOW_OPENGL);
+    SDL_WINDOWPOS_UNDEFINED,
+    SDL_WINDOWPOS_UNDEFINED,
+    640,
+    480,
+    SDL_WINDOW_OPENGL);
   if (window == nullptr)
   {
     SDL_Log("Could not create a window: %s", SDL_GetError());
@@ -50,7 +51,7 @@ int main( int argc, char *argv[] ) {
   SDL_AudioSpec wavSpec;
   Uint32 wavLength;
   Uint8 *wavBuffer;
-   
+
   SDL_LoadWAV("assets/music.wav", &wavSpec, &wavBuffer, &wavLength);
 
   // open audio device
@@ -88,7 +89,7 @@ int main( int argc, char *argv[] ) {
   Engine* newengine = new Engine(renderer, 640, 480, 8);
 
   // player entitiy
-  Entity player("player", 5, 5, 0.0, 0.0, 0.0, 0.0, {255,0,0,255});
+  Entity player("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, {255,0,0,255}, 10.0);
 
   newengine -> entities.push_back(&player);
 
@@ -134,19 +135,53 @@ int main( int argc, char *argv[] ) {
     {
       if (event.type == SDL_KEYDOWN){
         switch (event.key.keysym.sym)
-          {
-              case SDLK_LEFT:  newengine -> offset_viewport_rect(-1,0); break;
-              case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); break;
-              case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); break;
-              case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); break;
+        {
+          case SDLK_LEFT:  newengine -> offset_viewport_rect(-1,0); break;
+          case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); break;
+          case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); break;
+          case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); break;
 
-              case SDLK_w:  player.sety(player.gety() - 1); break;
-              case SDLK_a:  player.setx(player.getx() - 1); break;
-              case SDLK_s:  player.sety(player.gety() + 1); break;
-              case SDLK_d:  player.setx(player.getx() + 1); break;
-              
-          }
+          case SDLK_w:  player.shove(0.0, 1.0); break;
+          case SDLK_a:  player.shove(-1.0, 0.0); break;
+          case SDLK_s:  player.shove(0.0, -1.0); break;
+          case SDLK_d:  player.shove(1.0, 0.0); break;
+
+        }
       }
+
+      // kill force on player once key is lifted
+      if (event.type == SDL_KEYUP){
+        switch (event.key.keysym.sym)
+        {
+          case SDLK_w:  player.setay(0.0); player.setvy(0.0); break;
+          case SDLK_a:  player.setax(0.0); player.setvx(0.0); break;
+          case SDLK_s:  player.setay(0.0); player.setvy(0.0); break;
+          case SDLK_d:  player.setax(0.0); player.setvx(0.0); break;
+        }
+      }
+
+      if (event.type == SDL_MOUSEBUTTONDOWN){
+        int mouseX = event.motion.x;
+        int mouseY = event.motion.y;
+        switch (event.button.button)
+        {
+          case SDL_BUTTON_LEFT:
+          printf("Left mouse button pressed at %d, %d.\n", mouseX, mouseY);
+          break;
+          case SDL_BUTTON_RIGHT:
+          printf("Right mouse button pressed.\n");;
+          break;
+          default:
+          printf("Some other mouse button pressed.\n");
+          break;
+        }
+      }
+
+      if (event.type == SDL_MOUSEMOTION)
+      {
+
+      }
+      
       if (event.type == SDL_QUIT)
       {
         // Break out of the loop on quit
@@ -157,7 +192,7 @@ int main( int argc, char *argv[] ) {
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 
     //newengine -> randomOpacities();
-    newengine -> runPhysics(0.001);
+    newengine -> runPhysics(1);
     newengine -> drawFrame();
 
     SDL_SetRenderDrawColor(renderer, 225, 0,0, 225);

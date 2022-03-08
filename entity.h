@@ -22,49 +22,63 @@ class Entity
     private:
 
         string mname;
-        int mx;
-        int my;
+        float mx;
+        float my;
         float mvx;
         float mvy;
-        float mfx;
-        float mfy;
+        float max;
+        float may;
+        float mmass;
+        float mtermvx;
+        float mtermvy;
         
 
     public:
 
         // constructor and deconstructor
-        Entity(string name, int x, int y, float vx, float vy, float fx, float fy, SDL_Color color);
+        Entity(string name, float x, float y, float vx, float vy, float ax, float ay, float termvx, float termvy, SDL_Color color, float mass);
         ~Entity();
 
-        int getx() { return mx; }
-        int gety() { return my; }
-        int getvx() { return mvx; }
-        int getvy() { return mvy; }
-        int getfx() { return mfx; }
-        int getfy() { return mfy; }
+        float getx() { return mx; }
+        float gety() { return my; }
+        float getvx() { return mvx; }
+        float getvy() { return mvy; }
+        float getax() { return max; }
+        float getay() { return may; }
+        float gettermvx() { return mtermvx; }
+        float gettermvy() { return mtermvy; }
+        float getmass() { return mmass; }
 
-        void setx(int x) { mx = x; }
-        void sety(int y) { my = y; }
+        void setx(float x) { mx = x; }
+        void sety(float y) { my = y; }
         void setvx(float vx) { mvx = vx; }
         void setvy(float vy) { mvy = vy; }
-        void setfx(float fx) { mfx = fx; }
-        void setfy(float fy) { mfy = fy; }
+        void setax(float ax) { max = ax; }
+        void setay(float ay) { may = ay; }
+        void settermvx(float termvx) { mtermvx = termvx; }
+        void settermvy(float termvy) { mtermvy = termvy; }
+        void setmass(float mass) { mmass = mass; }
+
+        void shove(float fx, float fy) { max = fx / mmass; may = fy / mmass; }
 
         SDL_Color mcolor;
 
 };
 
 // Engine constructor
-Entity::Entity(string name, int x, int y, float vx, float vy, float fx, float fy, SDL_Color color)
+Entity::Entity(string name, float x = 0, float y = 0, float vx = 0.0, float vy = 0.0, float ax = 0.0, float ay = 0.0, float termvx = 10.0, float termvy = 10.0, SDL_Color color = {255, 0,0, 255}, float mass = 1.0)
 {
     mname = name;
     mx = x;
     my = y;
     mvx = vx;
     mvy = vy;
-    mfx = fx;
-    mfy = fy;
+    max = ax;
+    may = ay;
+    mtermvx = termvx;
+    mtermvy = termvy;
     mcolor = color;
+    mmass = mass;
 }
 
 // Define the destructor.

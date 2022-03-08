@@ -203,7 +203,14 @@ void Engine::runPhysics(float deltat)
 {
     for(Entity *i : entities) 
     {
-       break;
+        // update objects velocities
+        // TODO: implement terminal velocity cap
+        i -> setvx(i -> getvx() + (i -> getax() * deltat));
+        i -> setvy(i -> getvy() + (i -> getay() * deltat));
+
+        // update object positions
+        i -> setx(i -> getx() + (i -> getvx() * deltat));
+        i -> sety(i -> gety() + (i -> getvy() * deltat));
     }
 }
 
@@ -240,13 +247,15 @@ void Engine::drawFrame()
         }
     }
 
-    // draw entities
+    // draw entities 
     for(Entity *i : entities) 
     {
         // generic entity object
         SDL_Rect entity_rect;
         entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
-        entity_rect.y = (i -> gety() - viewport_rect.y)*mscale;
+        printf("%f\n", i -> getx());
+        //(entities are on flipped y axis!)
+        entity_rect.y = mheight - (i -> gety() + viewport_rect.y)*mscale;
         entity_rect.w = mscale;
         entity_rect.h = mscale;
         SDL_SetRenderDrawColor(mrenderer, i -> mcolor.r, i -> mcolor.g, i -> mcolor.b, i -> mcolor.a);
