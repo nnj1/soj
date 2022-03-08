@@ -22,7 +22,7 @@ int main( int argc, char *argv[] ) {
     return -1;
   }
 
-  SDL_Surface *icon = IMG_Load("assets/skull.png");
+  SDL_Surface *icon = IMG_Load("assets/icon.png");
   SDL_SetWindowIcon(window, icon);
 
   if ( TTF_Init() < 0 ) {
@@ -43,7 +43,7 @@ int main( int argc, char *argv[] ) {
     return -1;
   }
 
-  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   
   SDL_Init(SDL_INIT_AUDIO);
   
@@ -61,9 +61,9 @@ int main( int argc, char *argv[] ) {
   //int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
   //SDL_PauseAudioDevice(deviceId, 0);
 
-  // HUD setup
+  // text HUD 
   SDL_Color color = { 255, 255, 255 };
-  string backgroundtext = "Health";
+  string backgroundtext = "FPS";
   SDL_Surface * surface = TTF_RenderText_Blended_Wrapped(font, backgroundtext.c_str(), color, 200);
   int texW = 0;
   int texH = 0;
@@ -78,12 +78,17 @@ int main( int argc, char *argv[] ) {
 
 
   // image background HUD
-  SDL_Surface * image = IMG_Load("assets/black.png");
+  SDL_Surface * image = IMG_Load("assets/hud.png");
   SDL_BlitSurface(surface, NULL, image, &dstrect);
 
-  SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer, image);
+  SDL_Texture * hudtexture = SDL_CreateTextureFromSurface(renderer, image);
 
   // 640 x 480 (width and height) 
+
+  // create custom mouse cursor
+  SDL_Surface* cursorimage = IMG_Load("assets/cursor.png");
+  SDL_Cursor* cursor = SDL_CreateColorCursor(cursorimage, 1, 1);
+  SDL_SetCursor(cursor);
 
   // engine 
   Engine* newengine = new Engine(renderer, 640, 480, 8);
@@ -100,9 +105,9 @@ int main( int argc, char *argv[] ) {
   SDL_Surface * splashimage = IMG_Load("assets/splash.png");
   SDL_Texture * splashtexture = SDL_CreateTextureFromSurface(renderer, splashimage);
 
-  
-  SDL_SetTextureAlphaMod(splashtexture, 100);
   Uint32 initTime = SDL_GetTicks();
+
+  Uint32 alpha = 0;
 
   while (SDL_GetTicks() - initTime < 5000)
   { 
@@ -119,12 +124,26 @@ int main( int argc, char *argv[] ) {
         break;
       }
     }
-    // TODO: fade in and fade out effect
-    SDL_RenderCopy(renderer, splashtexture, NULL, NULL);
-    SDL_SetRenderDrawColor(renderer, 225, 0,0, 225);
-    SDL_RenderPresent(renderer);
 
+    SDL_SetTextureAlphaMod(splashtexture, alpha);
+    // fade in effect
+    if (alpha <= 255){
+      SDL_SetTextureAlphaMod(splashtexture, alpha);
+      alpha += 1;
+      //printf("%d\n", alpha);
+    }
+
+    // CLEAR THE SCREEN WITH A WHITE COLOR:
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_RenderCopy(renderer, splashtexture, NULL, NULL);
+    SDL_RenderPresent(renderer);
+    //SDL_Delay(10);
+    
   }
+
+  //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
 
   while (true)
   {
@@ -189,13 +208,18 @@ int main( int argc, char *argv[] ) {
       }
     }
 
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    // CLEAR THE SCREEN
+    SDL_RenderClear(renderer);
 
     //newengine -> randomOpacities();
     newengine -> runPhysics(1);
     newengine -> drawFrame();
 
-    SDL_SetRenderDrawColor(renderer, 225, 0,0, 225);
+    // make default background white
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 225);
+
+    // draw base hud
+    SDL_RenderCopy(renderer, hudtexture, NULL, NULL);
 
     // Show the renderer contents
     SDL_RenderPresent(renderer);
@@ -205,7 +229,7 @@ int main( int argc, char *argv[] ) {
 
   SDL_CloseAudioDevice(deviceId);
   SDL_FreeWAV(wavBuffer);
-  SDL_DestroyTexture(texture);
+  SDL_DestroyTexture(hudtexture);
   SDL_FreeSurface(surface);
   TTF_CloseFont(font);
   SDL_DestroyRenderer(renderer);

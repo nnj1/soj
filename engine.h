@@ -247,14 +247,14 @@ void Engine::drawFrame()
         }
     }
 
-    // draw entities 
+    // draw entities (to nearest pixel)
     for(Entity *i : entities) 
     {
         // generic entity object
         SDL_Rect entity_rect;
         entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
         //(entities are on flipped y axis!)
-        entity_rect.y = mheight - (i -> gety() + viewport_rect.y)*mscale;
+        entity_rect.y = mheight - (int(floor(i -> gety())) + viewport_rect.y)*mscale;
         entity_rect.w = mscale;
         entity_rect.h = mscale;
         SDL_SetRenderDrawColor(mrenderer, i -> mcolor.r, i -> mcolor.g, i -> mcolor.b, i -> mcolor.a);
@@ -308,10 +308,10 @@ void Engine::loadMap(string filename)
             }
             // color all else black
             else if (mmap.at(y).at(x) != ' '){
-                cells.at(y).at(x).r = 0;
-                cells.at(y).at(x).g = 0;
-                cells.at(y).at(x).b = 0;
-                cells.at(y).at(x).a = 0;
+                cells.at(y).at(x).r = 255;
+                cells.at(y).at(x).g = 255;
+                cells.at(y).at(x).b = 240;
+                cells.at(y).at(x).a = 255;
             }
             // color all else black
             else{
