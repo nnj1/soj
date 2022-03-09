@@ -12,6 +12,7 @@
 
 #include <cstdlib>   // rand and srand
 #include <ctime>     // For the time function
+#include <cmath>     // abs
 
 #include "entity.h"
 
@@ -68,7 +69,7 @@ public:
     int getScale() { return mscale; }
     SDL_Rect getViewport_rect() { return viewport_rect; }
     void setViewport_rect(int x, int y, int w, int h) { viewport_rect = {x, y, w, h}; }
-    void centerViewport_rect();
+    void centerViewport_rect(Entity* i);
     SDL_Renderer* mrenderer;
     vector<vector<SDL_Color> > cells;
 
@@ -205,9 +206,11 @@ void Engine::runPhysics(float deltat)
     {
         // update objects velocities
         // TODO: implement terminal velocity cap
-        i -> setvx(i -> getvx() + (i -> getax() * deltat));
-        i -> setvy(i -> getvy() + (i -> getay() * deltat));
-
+        if (abs(i -> getvx()) < i -> gettermvx())
+            i -> setvx(i -> getvx() + (i -> getax() * deltat));
+        if (abs(i -> getvy()) < i -> gettermvy())
+            i -> setvy(i -> getvy() + (i -> getay() * deltat));
+        //printf("%f\n", i -> getvx());
         // update object positions
         i -> setx(i -> getx() + (i -> getvx() * deltat));
         i -> sety(i -> gety() + (i -> getvy() * deltat));
@@ -254,7 +257,7 @@ void Engine::drawFrame()
         SDL_Rect entity_rect;
         entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
         //(entities are on flipped y axis!)
-        entity_rect.y = mheight - (int(floor(i -> gety())) + viewport_rect.y)*mscale;
+        entity_rect.y = mheight - (i -> gety() + viewport_rect.y)*mscale;
         entity_rect.w = mscale;
         entity_rect.h = mscale;
         SDL_SetRenderDrawColor(mrenderer, i -> mcolor.r, i -> mcolor.g, i -> mcolor.b, i -> mcolor.a);
@@ -329,7 +332,7 @@ void Engine::loadMap(string filename)
 }
 
 
-// only offsets viewport if it's possible!
+// only offsets viewport from current position by int x and int y if it's possible!
 void Engine::offset_viewport_rect(int x, int y){
     if (viewport_rect.x + x  >= 0 && viewport_rect.y + y >= 0 
         && viewport_rect.x + x <= (int) mwidth/mscale && viewport_rect.y + y <= (int) mheight/mscale){
@@ -339,6 +342,12 @@ void Engine::offset_viewport_rect(int x, int y){
     else{
         printf("hit bounds!\n");
     }
+}
+
+// center a viewport rectangle on an entity
+void Engine::centerViewport_rect(Entity* i){
+    viewport_rect.x = (int) i -> getx() - mwidth/(2*mscale);
+    viewport_rect.y = mheight/mscale - (int) i -> gety() - mheight/(2*mscale);
 }
 
 

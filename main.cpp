@@ -62,7 +62,7 @@ int main( int argc, char *argv[] ) {
   //SDL_PauseAudioDevice(deviceId, 0);
 
   // text HUD 
-  SDL_Color color = { 255, 255, 255 };
+  SDL_Color color = { 255, 0, 0 };
   string backgroundtext = "FPS";
   SDL_Surface * surface = TTF_RenderText_Blended_Wrapped(font, backgroundtext.c_str(), color, 200);
   int texW = 0;
@@ -91,10 +91,14 @@ int main( int argc, char *argv[] ) {
   SDL_SetCursor(cursor);
 
   // engine 
-  Engine* newengine = new Engine(renderer, 640, 480, 8);
+  int width = 640;
+  int height = 480;
+  int scale = 8;
+
+  Engine* newengine = new Engine(renderer, width, height, scale);
 
   // player entitiy
-  Entity player("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, {255,0,0,255}, 10.0);
+  Entity player("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {255,0,0,255}, 10.0);
 
   newengine -> entities.push_back(&player);
 
@@ -145,6 +149,8 @@ int main( int argc, char *argv[] ) {
 
   //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
 
+  bool camcon = true;
+
   while (true)
   {
 
@@ -155,15 +161,17 @@ int main( int argc, char *argv[] ) {
       if (event.type == SDL_KEYDOWN){
         switch (event.key.keysym.sym)
         {
-          case SDLK_LEFT:  newengine -> offset_viewport_rect(-1,0); break;
-          case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); break;
-          case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); break;
-          case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); break;
+          // move viewport according to arrow keys
+          case SDLK_LEFT:  newengine -> offset_viewport_rect(-1,0); camcon = true; break;
+          case SDLK_RIGHT: newengine -> offset_viewport_rect(+1,0); camcon = true; break;
+          case SDLK_UP:    newengine -> offset_viewport_rect(0,-1); camcon = true; break;
+          case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); camcon = true; break;
 
-          case SDLK_w:  player.shove(0.0, 1.0); break;
-          case SDLK_a:  player.shove(-1.0, 0.0); break;
-          case SDLK_s:  player.shove(0.0, -1.0); break;
-          case SDLK_d:  player.shove(1.0, 0.0); break;
+          // move player and viewport to center on player
+          case SDLK_w:  player.shove(0.0, 1.0); camcon = false; break; 
+          case SDLK_a:  player.shove(-1.0, 0.0); camcon = false; break;
+          case SDLK_s:  player.shove(0.0, -1.0); camcon = false; break; 
+          case SDLK_d:  player.shove(1.0, 0.0); camcon = false; break; 
 
         }
       }
@@ -213,6 +221,11 @@ int main( int argc, char *argv[] ) {
 
     //newengine -> randomOpacities();
     newengine -> runPhysics(1);
+
+    // center camera on player if not manually controlling camera
+    if (!camcon)
+      newengine -> centerViewport_rect(&player);
+
     newengine -> drawFrame();
 
     // make default background white

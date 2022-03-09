@@ -66,7 +66,7 @@ class Entity
 };
 
 // Engine constructor
-Entity::Entity(string name, float x = 0, float y = 0, float vx = 0.0, float vy = 0.0, float ax = 0.0, float ay = 0.0, float termvx = 10.0, float termvy = 10.0, SDL_Color color = {255, 0,0, 255}, float mass = 1.0)
+Entity::Entity(string name, float x = 0, float y = 0, float vx = 0.0, float vy = 0.0, float ax = 0.0, float ay = 0.0, float termvx = 10, float termvy = 10, SDL_Color color = {255, 0,0, 255}, float mass = 1.0)
 {
     mname = name;
     mx = x;
