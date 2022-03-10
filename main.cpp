@@ -37,7 +37,7 @@ int main( int argc, char *argv[] ) {
     cout << "Failed to load font: " << TTF_GetError() << endl;
   }
 
-  SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC || SDL_RENDERER_ACCELERATED);
   if (renderer == nullptr)
   {
     SDL_Log("Could not create a renderer: %s", SDL_GetError());
@@ -64,8 +64,8 @@ int main( int argc, char *argv[] ) {
 
   // text HUD 
   SDL_Color color = { 255, 0, 0 };
-  string backgroundtext = "FPS";
-  SDL_Surface * surface = TTF_RenderText_Blended_Wrapped(font, backgroundtext.c_str(), color, 200);
+  string fpstext = "FPS";
+  SDL_Surface * surface = TTF_RenderText_Blended_Wrapped(font, fpstext.c_str(), color, 200);
   int texW = 0;
   int texH = 0;
   SDL_Texture * texttexture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -152,10 +152,10 @@ int main( int argc, char *argv[] ) {
 
   bool camcon = true;
   bool shooting = false;
+  int mouseX, mouseY; // stores position of mouse
 
   while (true)
   {
-
     // Get the next event
     SDL_Event event;
     if (SDL_PollEvent(&event))
@@ -190,8 +190,8 @@ int main( int argc, char *argv[] ) {
       }
 
       if (event.type == SDL_MOUSEBUTTONDOWN){
-        int mouseX = event.motion.x;
-        int mouseY = event.motion.y;
+        //int mouseX = event.motion.x;
+        //int mouseY = event.motion.y;
         switch (event.button.button)
         {
           case SDL_BUTTON_LEFT:
@@ -224,26 +224,9 @@ int main( int argc, char *argv[] ) {
         }
       }
 
-      if (shooting){
-        int mouseX = event.motion.x;
-        int mouseY = event.motion.y;
-
-        // create new entitiy there 
-        Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
-        bullet -> shove((bullet -> getx() - player -> getx())/50, (bullet -> gety() - player -> gety())/50);
-        newengine -> addEntity(bullet);
-
-        // ===========
-        printf("created entity at %f, %f\n", bullet -> getx(), bullet -> gety());
-        printf("Entity List (%lu) \n", newengine -> getEntities().size());
-        for(auto & i : newengine -> getEntities()) 
-          printf("%s %f, %f\n", i -> getname().c_str(), i -> getx(), i -> gety());
-        //=========== /
-      }
-
       if (event.type == SDL_MOUSEMOTION)
       {
-
+        SDL_GetMouseState(&mouseX, &mouseY);
       }
       
       if (event.type == SDL_QUIT)
@@ -251,6 +234,35 @@ int main( int argc, char *argv[] ) {
         // Break out of the loop on quit
         break;
       }
+    }
+
+    if (shooting){
+
+        // create new entity at position of the click
+        //Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
+        
+        // create new entity at player's position
+        Entity *bullet = new Entity("bullet", player -> getx(), player -> gety(), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
+
+        // get vectors to the direction of the click) (in pixels in normal coords)
+        float clickx = mouseX/scale + newengine -> getViewport_rect().x;
+        float clicky = newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y);
+
+        // get unit vectors from direction of click to player
+        float dx = clickx - player -> getx();
+        float dy = clicky - player -> gety();
+
+        float len = pow(pow(dx, 2) + pow(dy, 2), 0.5);
+
+        bullet -> shove((dx + (rand()%10 - 5))/len, (dy + (rand()%10 - 5))/len);
+        newengine -> addEntity(bullet);
+
+        /* ===========
+        printf("created entity at %f, %f\n", bullet -> getx(), bullet -> gety());
+        printf("Entity List (%lu) \n", newengine -> getEntities().size());
+        for(auto & i : newengine -> getEntities()) 
+          printf("%s %f, %f\n", i -> getname().c_str(), i -> getx(), i -> gety());
+        //=========== */
     }
 
     // CLEAR THE SCREEN
@@ -275,6 +287,7 @@ int main( int argc, char *argv[] ) {
 
     // Show the renderer contents
     SDL_RenderPresent(renderer);
+
   }
 
   // Tidy up
