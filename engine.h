@@ -45,6 +45,9 @@ private:
     // mix music object pointer
     Mix_Music *music;
 
+    // contains all entities
+    vector<Entity*> entities;
+
 public:
 
     // constructor and deconstructor
@@ -63,7 +66,9 @@ public:
     void randomOpacities();
     vector<vector<char> > readMap(string filename);
     void loadMap(string filename);
+    void addEntity(Entity * i) { entities.push_back(i); } 
 
+    vector<Entity*> getEntities() {return entities; }
     int getWidth() { return mwidth; }
     int getHeight() { return mheight; }
     int getScale() { return mscale; }
@@ -74,8 +79,6 @@ public:
     vector<vector<SDL_Color> > cells;
 
     void offset_viewport_rect(int x, int y);
-
-    vector<Entity*> entities;
 };
 
 // Engine constructor
@@ -202,10 +205,11 @@ void Engine::solidColors()
 
 void Engine::runPhysics(float deltat)
 {
-    for(Entity *i : entities) 
+    for(int j = 0; j < entities.size(); j++) 
     {
+        Entity *i = entities[j];
+
         // update objects velocities
-        // TODO: implement terminal velocity cap
         if (abs(i -> getvx()) < i -> gettermvx())
             i -> setvx(i -> getvx() + (i -> getax() * deltat));
         if (abs(i -> getvy()) < i -> gettermvy())
@@ -214,7 +218,23 @@ void Engine::runPhysics(float deltat)
         // update object positions
         i -> setx(i -> getx() + (i -> getvx() * deltat));
         i -> sety(i -> gety() + (i -> getvy() * deltat));
+
     }
+
+    // destroy bullet projectile if out of bounds OF THE MAP!
+
+    if(entities.empty() == false) {
+        for(int i = entities.size() - 1; i >= 0; i--) {
+            if(entities.at(i) -> getname() == "bullet" && (entities.at(i) -> getx() < 0 || entities.at(i) -> getx() > cells[0].size() || entities.at(i) -> gety() < 0 || entities.at(i) -> gety() > cells.size())) {
+                //printf("bullet at %f, %f", entities.at(i) -> getx(), entities.at(i) -> gety());
+                Entity * bad = entities.at(i);
+                entities.erase( entities.begin() + i ); 
+                delete bad;
+                //printf(" was deleted\n");
+            }
+        }
+    }
+
 }
 
 void Engine::drawFrame()
@@ -239,7 +259,7 @@ void Engine::drawFrame()
                 cex = cells.at(y + viewport_rect.y).at(x + viewport_rect.x);
             }
             catch (const std::out_of_range& oor) {
-                std::cerr << "Out of Range error: " << oor.what() << '\n';
+                //std::cerr << "Out of Range error: " << oor.what() << '\n';
                 // color out of rangle pixel red
                 cex = SDL_Color{225, 0,0, 225};
             }
@@ -251,15 +271,17 @@ void Engine::drawFrame()
     }
 
     // draw entities (to nearest pixel)
-    for(Entity *i : entities) 
+
+    for(auto & i : entities) 
     {
         // generic entity object
         SDL_Rect entity_rect;
         entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
         //(entities are on flipped y axis!)
-        entity_rect.y = mheight - (i -> gety() + viewport_rect.y)*mscale;
+        entity_rect.y = (cells.size() - i -> gety() - viewport_rect.y)*mscale;
         entity_rect.w = mscale;
         entity_rect.h = mscale;
+        //printf("%d\n", entity_rect.x);
         SDL_SetRenderDrawColor(mrenderer, i -> mcolor.r, i -> mcolor.g, i -> mcolor.b, i -> mcolor.a);
         SDL_RenderFillRect(mrenderer, &entity_rect);
     }
@@ -326,6 +348,8 @@ void Engine::loadMap(string filename)
         }
     }
 
+    printf("Loaded map that's %lu x %lu cells\n", cells[0].size(), cells.size());
+
     //set timer for water animation
     my_timer_id = SDL_AddTimer(250, changeOpacities, this);
 
@@ -334,20 +358,25 @@ void Engine::loadMap(string filename)
 
 // only offsets viewport from current position by int x and int y if it's possible!
 void Engine::offset_viewport_rect(int x, int y){
-    if (viewport_rect.x + x  >= 0 && viewport_rect.y + y >= 0 
-        && viewport_rect.x + x <= (int) mwidth/mscale && viewport_rect.y + y <= (int) mheight/mscale){
+    if (viewport_rect.x + x  >= 0 && viewport_rect.x + x <= (int) mwidth/mscale)
         viewport_rect.x += x; 
+    else
+        printf("hit x bounds!\n");
+    if(viewport_rect.y + y >= 0 && viewport_rect.y + y <= (int) mheight/mscale)
         viewport_rect.y += y;
-    }
-    else{
-        printf("hit bounds!\n");
-    }
+    else
+        printf("hit y bounds!\n");
 }
 
-// center a viewport rectangle on an entity
+// center a viewport rectangle on an entity only if it's possible!
 void Engine::centerViewport_rect(Entity* i){
-    viewport_rect.x = (int) i -> getx() - mwidth/(2*mscale);
-    viewport_rect.y = mheight/mscale - (int) i -> gety() - mheight/(2*mscale);
+    int x = (int) i -> getx() - mwidth/(2*mscale);
+    int y = (cells.size() - (int) i -> gety()) - mheight/(2*mscale);
+
+    if (x >= 0 && x <= (cells[0].size() - mwidth/mscale))
+        viewport_rect.x = x;
+    if (y >= 0 && y <= (cells.size() - mheight/mscale))
+        viewport_rect.y = y;
 }
 
 

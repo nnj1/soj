@@ -45,6 +45,7 @@ class Entity
         float getvy() { return mvy; }
         float getax() { return max; }
         float getay() { return may; }
+        string getname() {return mname; }
         float gettermvx() { return mtermvx; }
         float gettermvy() { return mtermvy; }
         float getmass() { return mmass; }

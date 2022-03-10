@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
+#include <cstdlib>   // rand and srand
 #include "engine.h"
 #include "entity.h"
 
@@ -87,7 +88,7 @@ int main( int argc, char *argv[] ) {
 
   // create custom mouse cursor
   SDL_Surface* cursorimage = IMG_Load("assets/cursor.png");
-  SDL_Cursor* cursor = SDL_CreateColorCursor(cursorimage, 1, 1);
+  SDL_Cursor* cursor = SDL_CreateColorCursor(cursorimage, 0, 0);
   SDL_SetCursor(cursor);
 
   // engine 
@@ -98,9 +99,9 @@ int main( int argc, char *argv[] ) {
   Engine* newengine = new Engine(renderer, width, height, scale);
 
   // player entitiy
-  Entity player("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {255,0,0,255}, 10.0);
+  Entity *player = new Entity("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {255,0,0,255}, 10.0);
 
-  newengine -> entities.push_back(&player);
+  newengine -> addEntity(player);
 
   newengine -> loadMap("maps/test.map");
 
@@ -150,6 +151,7 @@ int main( int argc, char *argv[] ) {
   //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
 
   bool camcon = true;
+  bool shooting = false;
 
   while (true)
   {
@@ -168,10 +170,10 @@ int main( int argc, char *argv[] ) {
           case SDLK_DOWN:  newengine -> offset_viewport_rect(0,+1); camcon = true; break;
 
           // move player and viewport to center on player
-          case SDLK_w:  player.shove(0.0, 1.0); camcon = false; break; 
-          case SDLK_a:  player.shove(-1.0, 0.0); camcon = false; break;
-          case SDLK_s:  player.shove(0.0, -1.0); camcon = false; break; 
-          case SDLK_d:  player.shove(1.0, 0.0); camcon = false; break; 
+          case SDLK_w:  player -> shove(0.0, 1.0); camcon = false; break; 
+          case SDLK_a:  player -> shove(-1.0, 0.0); camcon = false; break;
+          case SDLK_s:  player -> shove(0.0, -1.0); camcon = false; break; 
+          case SDLK_d:  player -> shove(1.0, 0.0); camcon = false; break; 
 
         }
       }
@@ -180,10 +182,10 @@ int main( int argc, char *argv[] ) {
       if (event.type == SDL_KEYUP){
         switch (event.key.keysym.sym)
         {
-          case SDLK_w:  player.setay(0.0); player.setvy(0.0); break;
-          case SDLK_a:  player.setax(0.0); player.setvx(0.0); break;
-          case SDLK_s:  player.setay(0.0); player.setvy(0.0); break;
-          case SDLK_d:  player.setax(0.0); player.setvx(0.0); break;
+          case SDLK_w:  player -> setay(0.0); player -> setvy(0.0); break;
+          case SDLK_a:  player -> setax(0.0); player -> setvx(0.0); break;
+          case SDLK_s:  player -> setay(0.0); player -> setvy(0.0); break;
+          case SDLK_d:  player -> setax(0.0); player -> setvx(0.0); break;
         }
       }
 
@@ -193,15 +195,50 @@ int main( int argc, char *argv[] ) {
         switch (event.button.button)
         {
           case SDL_BUTTON_LEFT:
-          printf("Left mouse button pressed at %d, %d.\n", mouseX, mouseY);
-          break;
+            {
+              printf("Left mouse button pressed at %d, %d. Pixel Coordinates %d, %d \n", mouseX, mouseY, (int) mouseX/scale, (int) mouseY/scale);
+              shooting = true;
+              break;
+            }
+            
+
           case SDL_BUTTON_RIGHT:
-          printf("Right mouse button pressed.\n");;
-          break;
+            printf("Right mouse button pressed.\n");
+            break;
+
           default:
-          printf("Some other mouse button pressed.\n");
-          break;
+            printf("Some other mouse button pressed.\n");
+            break;
         }
+      }
+
+      if (event.type == SDL_MOUSEBUTTONUP){
+        switch (event.button.button)
+        {
+          case SDL_BUTTON_LEFT:
+            shooting = false;
+            break;
+
+          default:
+            break;
+        }
+      }
+
+      if (shooting){
+        int mouseX = event.motion.x;
+        int mouseY = event.motion.y;
+
+        // create new entitiy there 
+        Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
+        bullet -> shove((bullet -> getx() - player -> getx())/50, (bullet -> gety() - player -> gety())/50);
+        newengine -> addEntity(bullet);
+
+        // ===========
+        printf("created entity at %f, %f\n", bullet -> getx(), bullet -> gety());
+        printf("Entity List (%lu) \n", newengine -> getEntities().size());
+        for(auto & i : newengine -> getEntities()) 
+          printf("%s %f, %f\n", i -> getname().c_str(), i -> getx(), i -> gety());
+        //=========== /
       }
 
       if (event.type == SDL_MOUSEMOTION)
@@ -224,9 +261,11 @@ int main( int argc, char *argv[] ) {
 
     // center camera on player if not manually controlling camera
     if (!camcon)
-      newengine -> centerViewport_rect(&player);
+      newengine -> centerViewport_rect(player);
 
     newengine -> drawFrame();
+
+    //printf("last entity: %f, %f\n", newengine -> entities.back() -> getx(), newengine -> entities.back() -> gety());
 
     // make default background white
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 225);
