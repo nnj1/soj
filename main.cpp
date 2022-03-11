@@ -7,7 +7,7 @@
 #include "engine.h"
 #include "entity.h"
 
-using namespace std;
+using namespace std; // technically a bad practice
 
 int main( int argc, char *argv[] ) {
 
@@ -99,7 +99,7 @@ int main( int argc, char *argv[] ) {
   Engine* newengine = new Engine(renderer, width, height, scale);
 
   // player entitiy
-  Entity *player = new Entity("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {255,0,0,255}, 10.0);
+  Entity *player = new Entity("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 2, 2, {255,0,0,255}, 10.0);
 
   newengine -> addEntity(player);
 
@@ -178,7 +178,7 @@ int main( int argc, char *argv[] ) {
         }
       }
 
-      // kill force on player once key is lifted
+      // kill velocity on player once key is lifted
       if (event.type == SDL_KEYUP){
         switch (event.key.keysym.sym)
         {
@@ -242,7 +242,7 @@ int main( int argc, char *argv[] ) {
         //Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
         
         // create new entity at player's position
-        Entity *bullet = new Entity("bullet", player -> getx(), player -> gety(), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
+        Entity *bullet = new Entity("bullet", player -> getx(), player -> gety(), 0.0, 0.0, 0.0, 0.0, 1.5, 1.5, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 1);
 
         // get vectors to the direction of the click) (in pixels in normal coords)
         float clickx = mouseX/scale + newengine -> getViewport_rect().x;
@@ -254,7 +254,10 @@ int main( int argc, char *argv[] ) {
 
         float len = pow(pow(dx, 2) + pow(dy, 2), 0.5);
 
-        bullet -> shove((dx + (rand()%10 - 5))/len, (dy + (rand()%10 - 5))/len);
+        //bullet -> shove(, );
+        bullet -> setvx((dx + (rand()%10 - 5))/len);
+        bullet -> setvy((dy + (rand()%10 - 5))/len);
+        //printf("%f, %f\n", (dx + (rand()%10 - 5))/len, (dy + (rand()%10 - 5))/len);
         newengine -> addEntity(bullet);
 
         /* ===========

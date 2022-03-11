@@ -24,61 +24,64 @@ Uint32 changeOpacities(Uint32 interval, void *param);
 
 class Engine
 {
-private:
+    private:
 
-    // dimensions of window
-    int mwidth;
-    int mheight;
+        // dimensions of window
+        int mwidth;
+        int mheight;
 
-    // dimensiosn of a single pixel
-    int mscale;
+        // dimensiosn of a single pixel
+        int mscale;
 
-    // contains x and y offsets
-    SDL_Rect viewport_rect;
-    
-    // contains data loaded from .map file
-    vector<vector<char> > mmap;
+        // contains x and y offsets
+        SDL_Rect viewport_rect;
+        
+        // contains data loaded from .map file
+        vector<vector<char> > mmap;
 
-    // recurrent counter for environment animation updates
-    SDL_TimerID my_timer_id;
+        // recurrent counter for environment animation updates
+        SDL_TimerID my_timer_id;
 
-    // mix music object pointer
-    Mix_Music *music;
+        // mix music object pointer
+        Mix_Music *music;
 
-    // contains all entities
-    vector<Entity*> entities;
+        // contains all entities
+        vector<Entity*> entities;
 
-public:
+        // gravitational constant
+        const float GRAVITY = -0.002;
 
-    // constructor and deconstructor
-    Engine(SDL_Renderer *renderer, int width, int height, int scale);
-    ~Engine();
+    public:
 
-    // tick
-    Uint32 firsttick;
+        // constructor and deconstructor
+        Engine(SDL_Renderer *renderer, int width, int height, int scale);
+        ~Engine();
 
-    void SetEngine(SDL_Renderer *renderer, int width, int height, int scale);
-    void randomColors();
-    void solidColors();
-    void drawFrame();
-    void runPhysics(float deltat);
-    void flushCells();
-    void randomOpacities();
-    vector<vector<char> > readMap(string filename);
-    void loadMap(string filename);
-    void addEntity(Entity * i) { entities.push_back(i); } 
+        // tick
+        Uint32 firsttick;
 
-    vector<Entity*> getEntities() {return entities; }
-    int getWidth() { return mwidth; }
-    int getHeight() { return mheight; }
-    int getScale() { return mscale; }
-    SDL_Rect getViewport_rect() { return viewport_rect; }
-    void setViewport_rect(int x, int y, int w, int h) { viewport_rect = {x, y, w, h}; }
-    void centerViewport_rect(Entity* i);
-    SDL_Renderer* mrenderer;
-    vector<vector<SDL_Color> > cells;
+        void SetEngine(SDL_Renderer *renderer, int width, int height, int scale);
+        void randomColors();
+        void solidColors();
+        void drawFrame();
+        void runPhysics(float deltat);
+        void flushCells();
+        void randomOpacities();
+        vector<vector<char> > readMap(string filename);
+        void loadMap(string filename);
+        void addEntity(Entity * i) { entities.push_back(i); } 
 
-    void offset_viewport_rect(int x, int y);
+        vector<Entity*> getEntities() {return entities; }
+        int getWidth() { return mwidth; }
+        int getHeight() { return mheight; }
+        int getScale() { return mscale; }
+        SDL_Rect getViewport_rect() { return viewport_rect; }
+        void setViewport_rect(int x, int y, int w, int h) { viewport_rect = {x, y, w, h}; }
+        void centerViewport_rect(Entity* i);
+        SDL_Renderer* mrenderer;
+        vector<vector<SDL_Color> > cells;
+
+        void offset_viewport_rect(int x, int y);
 };
 
 // Engine constructor
@@ -107,6 +110,7 @@ Engine::Engine(SDL_Renderer *renderer, int width, int height, int scale)
 
     Mix_OpenAudio(22050, AUDIO_S16SYS, 2, 640);
     music = Mix_LoadMUS(MAINTHEME);
+    Mix_VolumeMusic(MIX_MAX_VOLUME/8);
     Mix_PlayMusic(music, 1);
 }
 
@@ -205,15 +209,74 @@ void Engine::solidColors()
 
 void Engine::runPhysics(float deltat)
 {
+
+    // apply universal forces to certain entities
+
+    for(int j = 0; j < entities.size(); j++) 
+    {
+        Entity *i = entities[j];
+
+        if (i -> getname() == "bullet")
+            i -> setay(i -> getay() + GRAVITY); 
+    }
+
+     // check if there's any collisions with map structural components
+
+    for(auto y = 0; y < cells.size(); ++y)
+    {
+        for(auto x = 0; x < cells.at(y).size(); ++x) {
+            
+            auto pixely = cells.size() - y; // flip the y axis, of course
+            auto pixelx = x;
+
+            // ground collisions only invert y velocity
+            if (mmap.at(y).at(x) == 'G'){
+                // see if any entities exist in the area denotes by the pixel
+                for(int j = 0; j < entities.size(); j++) 
+                {
+                    Entity *i = entities[j];
+                    if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
+                        // TODO: push object out of bounding box (1 pixel by 1 pixel)
+
+                        // reflect velocities
+                        i -> setvy(i -> getvy() * -1);
+                        
+                        // TODO: drain energies depending on degree of inelasticity
+                    }
+                }
+            }
+
+            // brickwall collisions invert x velocity
+            if (mmap.at(y).at(x) == 'B'){
+                // see if any entities exist in the area denotes by the pixel
+                for(int j = 0; j < entities.size(); j++) 
+                {
+                    Entity *i = entities[j];
+                    if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
+                        // reflect velocities
+                        i -> setvx(i -> getvx() * -1);
+                        // drain energies depending on degree of inelasticity
+                    }
+                }
+            }
+        }
+    }
+
+    // update positions and velocities now
+
     for(int j = 0; j < entities.size(); j++) 
     {
         Entity *i = entities[j];
 
         // update objects velocities
-        if (abs(i -> getvx()) < i -> gettermvx())
+        if (abs(i -> getvx() + (i -> getax() * deltat)) < i -> gettermvx())
             i -> setvx(i -> getvx() + (i -> getax() * deltat));
-        if (abs(i -> getvy()) < i -> gettermvy())
+        else 
+            i -> setvx(i -> getvx());
+        if (abs(i -> getvy() + (i -> getay() * deltat)) < i -> gettermvy())
             i -> setvy(i -> getvy() + (i -> getay() * deltat));
+        else 
+            i -> setvy(i -> getvy());
         //printf("%f\n", i -> getvx());
         // update object positions
         i -> setx(i -> getx() + (i -> getvx() * deltat));
@@ -312,8 +375,6 @@ void Engine::loadMap(string filename)
 
     // intialize background
     solidColors();
-
-    // TODO: MAKE THIS SCALE!
 
     for(auto y = 0; y < mmap.size(); ++y)
     {

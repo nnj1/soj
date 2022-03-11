@@ -60,7 +60,7 @@ class Entity
         void settermvy(float termvy) { mtermvy = termvy; }
         void setmass(float mass) { mmass = mass; }
 
-        void shove(float fx, float fy) { max = fx / mmass; may = fy / mmass; }
+        void shove(float fx, float fy) { max += fx / mmass; may += fy / mmass; }
 
         SDL_Color mcolor;
 
