@@ -240,7 +240,7 @@ void Engine::runPhysics(float deltat)
 
                         // reflect velocities
                         i -> setvy(i -> getvy() * -1);
-                        
+
                         // TODO: drain energies depending on degree of inelasticity
                     }
                 }
@@ -256,6 +256,24 @@ void Engine::runPhysics(float deltat)
                         // reflect velocities
                         i -> setvx(i -> getvx() * -1);
                         // drain energies depending on degree of inelasticity
+                    }
+                }
+            }
+
+            // water collisions dampen velocity
+            if (mmap.at(y).at(x) == 'W'){
+                // see if any entities exist in the area denotes by the pixel
+                for(int j = 0; j < entities.size(); j++) 
+                {
+                    Entity *i = entities[j];
+                    if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
+                        // TODO: push object out of bounding box (1 pixel by 1 pixel)
+
+                        // reflect velocities
+                        i -> setvx(i -> getvx() / 1.5);
+                        i -> setvy(i -> getvy() / 1.5);
+                        
+                        // TODO: drain energies depending on degree of inelasticity
                     }
                 }
             }
@@ -390,6 +408,13 @@ void Engine::loadMap(string filename)
                 cells.at(y).at(x).r = 0;
                 cells.at(y).at(x).g = 0;
                 cells.at(y).at(x).b = 255;
+                cells.at(y).at(x).a = 255;
+            }
+            // color brick walls brown
+            else if (mmap.at(y).at(x) == 'B'){
+                cells.at(y).at(x).r = 255;
+                cells.at(y).at(x).g = 255;
+                cells.at(y).at(x).b = 0;
                 cells.at(y).at(x).a = 255;
             }
             // color all else black
