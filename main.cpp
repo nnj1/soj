@@ -1,15 +1,22 @@
 #include <iostream>
 #include <sstream>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <cstdlib>   // rand and srand
 #include "engine.h"
 #include "entity.h"
 
+#define FPS_INTERVAL 1.0 //seconds.
+
 using namespace std; // technically a bad practice
 
+
 int main( int argc, char *argv[] ) {
+
+  // FPS calculation variables
+  Uint32 fps_lasttime = SDL_GetTicks(); // the last recorded time.
+  Uint32 fps_current; // the current FPS.
+  Uint32 fps_frames = 0; // frames passed since the last recorded fps.
 
   SDL_Window *window = SDL_CreateWindow("DANK",
     SDL_WINDOWPOS_UNDEFINED,
@@ -26,16 +33,6 @@ int main( int argc, char *argv[] ) {
   SDL_Surface *icon = IMG_Load("assets/icon.png");
   SDL_SetWindowIcon(window, icon);
 
-  if ( TTF_Init() < 0 ) {
-    cout << "Error initializing SDL_ttf: " << TTF_GetError() << endl;
-  }
-
-  TTF_Font* font;
-
-  font = TTF_OpenFont("assets/font.ttf", 24);
-  if ( !font ) {
-    cout << "Failed to load font: " << TTF_GetError() << endl;
-  }
 
   SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC || SDL_RENDERER_ACCELERATED);
   if (renderer == nullptr)
@@ -62,39 +59,48 @@ int main( int argc, char *argv[] ) {
   //int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
   //SDL_PauseAudioDevice(deviceId, 0);
 
-  // text HUD 
-  SDL_Color color = { 255, 0, 0 };
-  string fpstext = "FPS";
-  SDL_Surface * surface = TTF_RenderText_Blended_Wrapped(font, fpstext.c_str(), color, 200);
-  int texW = 0;
-  int texH = 0;
-  SDL_Texture * texttexture = SDL_CreateTextureFromSurface(renderer, surface);
-  SDL_QueryTexture(texttexture, NULL, NULL, &texW, &texH);
+  // engine window parameters
+  // 640 x 480 (width and height) 
+  int width = 640;
+  int height = 480;
+  int scale = 5;
 
-  SDL_Rect dstrect;
-  dstrect.x = 0;
-  dstrect.y = 0;
-  dstrect.w = texW;
-  dstrect.h = texH;
-
+  // HUD Generation
 
   // image background HUD
   SDL_Surface * image = IMG_Load("assets/hud.png");
-  SDL_BlitSurface(surface, NULL, image, &dstrect);
-
+  //SDL_BlitSurface(surface, NULL, image, &dstrect); // no need to blit anything on HUD right now
   SDL_Texture * hudtexture = SDL_CreateTextureFromSurface(renderer, image);
 
-  // 640 x 480 (width and height) 
+  // health bar
+
+  SDL_Rect health_rect;
+  health_rect.x = 14*scale;
+  health_rect.y = 2*scale;
+  health_rect.w = 47*scale; // dynamically adjust this!
+  health_rect.h = 2*scale;
+
+  // stamina bar
+
+  SDL_Rect stamina_rect;
+  stamina_rect.x = 14*scale;
+  stamina_rect.y = 8*scale;
+  stamina_rect.w = 34*scale; // dynamically adjust this!
+  stamina_rect.h = 2*scale;
+
+  // ammo bar
+
+  SDL_Rect ammo_rect;
+  ammo_rect.x = 2*scale;
+  ammo_rect.y = 6*scale;
+  ammo_rect.w = 2*scale; 
+  ammo_rect.h = 14*scale; // dynamically adjust this!
 
   // create custom mouse cursor
   SDL_Surface* cursorimage = IMG_Load("assets/cursor.png");
   SDL_Cursor* cursor = SDL_CreateColorCursor(cursorimage, 0, 0);
   SDL_SetCursor(cursor);
 
-  // engine 
-  int width = 640;
-  int height = 480;
-  int scale = 5;
 
   Engine* newengine = new Engine(renderer, width, height, scale);
 
@@ -301,6 +307,29 @@ int main( int argc, char *argv[] ) {
     // draw base hud
     SDL_RenderCopy(renderer, hudtexture, NULL, NULL);
 
+    
+    SDL_SetRenderDrawColor(renderer, 125, 0, 0, 255); 
+    SDL_RenderFillRect(renderer, &health_rect);
+
+
+    SDL_SetRenderDrawColor(renderer, 0, 125, 0, 255); 
+    SDL_RenderFillRect(renderer, &stamina_rect);
+
+
+    SDL_SetRenderDrawColor(renderer, 64, 51, 138, 255); 
+    SDL_RenderFillRect(renderer, &ammo_rect);
+
+    // update and draw FPS
+    fps_frames++;
+    if (fps_lasttime < SDL_GetTicks() - FPS_INTERVAL*1000)
+    {
+      fps_lasttime = SDL_GetTicks();
+      fps_current = fps_frames;
+      fps_frames = 0;
+    }
+
+    newengine -> drawText(to_string(fps_current),20,1,1,255,0,0);
+
     // Show the renderer contents
     SDL_RenderPresent(renderer);
 
@@ -311,11 +340,10 @@ int main( int argc, char *argv[] ) {
   SDL_CloseAudioDevice(deviceId);
   SDL_FreeWAV(wavBuffer);
   SDL_DestroyTexture(hudtexture);
-  SDL_FreeSurface(surface);
-  TTF_CloseFont(font);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
 
   return 0;
 }
+

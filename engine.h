@@ -48,9 +48,11 @@ class Engine
         // contains all entities
         vector<Entity*> entities;
 
-        // gravitational constant
+        // physics constants
         const float GRAVITY = -0.002;
         const float elasticity = 0.999;
+
+
         const bool pixelDraw = true;
 
     public:
@@ -84,6 +86,8 @@ class Engine
         vector<vector<SDL_Color> > cells;
 
         void offset_viewport_rect(int x, int y);
+
+        void drawText(string text,int text_size,int x,int y, Uint8 r,Uint8 g,Uint8 b);
 };
 
 // Engine constructor
@@ -114,6 +118,10 @@ Engine::Engine(SDL_Renderer *renderer, int width, int height, int scale)
     music = Mix_LoadMUS(MAINTHEME);
     Mix_VolumeMusic(MIX_MAX_VOLUME/8);
     Mix_PlayMusic(music, 1);
+
+  if ( TTF_Init() < 0 ) {
+    cout << "Error initializing SDL_ttf: " << TTF_GetError() << endl;
+  }
 }
 
 // Define the destructor.
@@ -541,6 +549,29 @@ void Engine::centerViewport_rect(Entity* i){
         viewport_rect.y = y;
 }
 
+
+void Engine::drawText(string text,int text_size,int x,int y, Uint8 r,Uint8 g,Uint8 b)
+{
+    TTF_Font* arial = TTF_OpenFont("assets/font.ttf",text_size);
+    if(arial == NULL)
+    {
+        printf("TTF_OpenFont: %s\n",TTF_GetError());
+    }
+    SDL_Color textColor = {r,g,b};
+    SDL_Surface* surfaceMessage = TTF_RenderText_Solid(arial,text.c_str(),textColor);
+    if(surfaceMessage == NULL)
+    {
+        printf("Unable to render text surface: %s\n",TTF_GetError());
+    }
+    SDL_Texture* message = SDL_CreateTextureFromSurface(mrenderer,surfaceMessage);
+    SDL_FreeSurface(surfaceMessage);
+    int text_width = surfaceMessage->w;
+    int text_height = surfaceMessage->h;
+    SDL_Rect textRect{x,y,text_width,text_height};
+
+    SDL_RenderCopy(mrenderer,message,NULL,&textRect);
+    TTF_CloseFont(arial);
+}
 
 // not a part of the class, just a callback for recurrent animations
 Uint32 changeOpacities(Uint32 interval, void *param)
