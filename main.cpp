@@ -198,7 +198,6 @@ int main( int argc, char *argv[] ) {
           case SDLK_a:  player -> setax(0.0); player -> setvx(0.0); break;
           case SDLK_s:  player -> setay(0.0); player -> setvy(0.0); break;
           case SDLK_d:  player -> setax(0.0); player -> setvx(0.0); break;
-
         }
       }
 

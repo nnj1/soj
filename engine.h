@@ -34,8 +34,15 @@ class Engine
         int mscale;
 
         // contains x and y offsets
-        SDL_Rect viewport_rect;
-        
+        struct SOJ_Rect
+        {
+            float x;
+            float y;
+            float w;
+            float h;
+        };
+        SOJ_Rect viewport_rect;
+                
         // contains data loaded from .map file
         vector<vector<char> > mmap;
 
@@ -79,8 +86,8 @@ class Engine
         int getWidth() { return mwidth; }
         int getHeight() { return mheight; }
         int getScale() { return mscale; }
-        SDL_Rect getViewport_rect() { return viewport_rect; }
-        void setViewport_rect(int x, int y, int w, int h) { viewport_rect = {x, y, w, h}; }
+        SOJ_Rect getViewport_rect() { return viewport_rect; }
+        void setViewport_rect(int x, int y, int w, int h) { viewport_rect = {(float) x, (float) y, (float) w, (float) h}; }
         void centerViewport_rect(Entity* i);
         SDL_Renderer* mrenderer;
         vector<vector<SDL_Color> > cells;
@@ -355,11 +362,11 @@ void Engine::runPhysics(float deltat)
         Entity *i = entities[j];
 
         // update objects velocities
-        if (abs(i -> getvx() + (i -> getax() * deltat)) < i -> gettermvx())
+        if (abs(i -> getvx() + (i -> getax() * deltat)) <= i -> gettermvx())
             i -> setvx(i -> getvx() + (i -> getax() * deltat));
         else 
             i -> setvx(i -> getvx());
-        if (abs(i -> getvy() + (i -> getay() * deltat)) < i -> gettermvy())
+        if (abs(i -> getvy() + (i -> getay() * deltat)) <= i -> gettermvy())
             i -> setvy(i -> getvy() + (i -> getay() * deltat));
         else 
             i -> setvy(i -> getvy());
@@ -425,7 +432,7 @@ void Engine::drawFrame()
     {
         // generic entity object
         SDL_Rect entity_rect;
-        if(pixelDraw)
+        if(pixelDraw and i -> getname() != "player")
         {
             entity_rect.x = ((int)(i -> getx() + 0.5f) - viewport_rect.x)*mscale;
             //(entities are on flipped y axis!)
@@ -540,8 +547,8 @@ void Engine::offset_viewport_rect(int x, int y){
 
 // center a viewport rectangle on an entity only if it's possible!
 void Engine::centerViewport_rect(Entity* i){
-    int x = (int) i -> getx() - mwidth/(2*mscale);
-    int y = (cells.size() - (int) i -> gety()) - mheight/(2*mscale);
+    int x =  i -> getx() - mwidth/(2*mscale);
+    int y = (cells.size() -  i -> gety()) - mheight/(2*mscale);
 
     if (x >= 0 && x <= (cells[0].size() - mwidth/mscale))
         viewport_rect.x = x;
