@@ -50,6 +50,8 @@ class Engine
 
         // gravitational constant
         const float GRAVITY = -0.002;
+        const float elasticity = 0.999;
+        const bool pixelDraw = true;
 
     public:
 
@@ -237,11 +239,15 @@ void Engine::runPhysics(float deltat)
                     Entity *i = entities[j];
                     if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
                         // TODO: push object out of bounding box (1 pixel by 1 pixel)
+                        //i -> setx(i -> getlastx());
+                        //i -> sety(i -> getlasty());
 
                         // reflect velocities
                         i -> setvy(i -> getvy() * -1);
 
                         // TODO: drain energies depending on degree of inelasticity
+                        i -> setvx(i -> getvx() * elasticity);
+                        i -> setvy(i -> getvy() * elasticity);
                     }
                 }
             }
@@ -256,6 +262,8 @@ void Engine::runPhysics(float deltat)
                         // reflect velocities
                         i -> setvx(i -> getvx() * -1);
                         // drain energies depending on degree of inelasticity
+                        i -> setvx(i -> getvx() * elasticity);
+                        i -> setvy(i -> getvy() * elasticity);
                     }
                 }
             }
@@ -274,8 +282,60 @@ void Engine::runPhysics(float deltat)
                         i -> setvy(i -> getvy() / 1.5);
                         
                         // TODO: drain energies depending on degree of inelasticity
+                        i -> setvx(i -> getvx() * elasticity);
+                        i -> setvy(i -> getvy() * elasticity);
                     }
                 }
+            }
+        }
+    }
+
+    // check entity-entity collisions
+
+    for(int j = 0; j < entities.size(); j++) 
+    {
+        for(int k = j; k < entities.size(); k++) 
+        {
+            Entity *a = entities[j];
+            Entity *b = entities[k];
+
+            if (a -> getname() == "bullet" && a -> getname() == "bullet"
+                && (int)(a -> getx() + 0.5f) == (int)(b -> getx() + 0.5f)
+                && (int)(a -> gety() + 0.5f) == (int)(b -> gety() + 0.5f)){
+                /* determine the type of collision
+                 _ _ _ 
+                |_|_|_|   
+                |_|A|_|
+                |_|_|_| 
+
+                */ 
+
+                //float elasticity = 0.99;// custom elasticity here
+                int lastx = (int) (b -> getlastx());
+                int lasty = (int) (b -> getlasty());
+                int ax = (int) (a -> getx());
+                int ay = (int) (a -> gety());
+
+                // head on horizantal collision
+
+                if(ax == lastx){
+                    a -> setvx(a -> getvx() * -1 * elasticity);
+                    b -> setvx(b -> getvx() * -1 * elasticity);
+                }
+                // head on vertical collision
+                if(ay == lasty){
+                    a -> setvy(a -> getvy() * -1 * elasticity);
+                    b -> setvy(b -> getvy() * -1 * elasticity);
+                }
+                // oblique collision
+                if(ay != lasty && ax != lastx){
+                    a -> setvx(a -> getvx() * -1 * elasticity);
+                    a -> setvy(a -> getvy() * -1 * elasticity);
+                    b -> setvx(b -> getvx() * -1 * elasticity);
+                    b -> setvy(b -> getvy() * -1 * elasticity);
+                }
+
+
             }
         }
     }
@@ -351,17 +411,33 @@ void Engine::drawFrame()
         }
     }
 
-    // draw entities (to nearest pixel)
+    // draw entities (to nearest pixel (or not))
 
     for(auto & i : entities) 
     {
         // generic entity object
         SDL_Rect entity_rect;
-        entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
-        //(entities are on flipped y axis!)
-        entity_rect.y = (cells.size() - i -> gety() - viewport_rect.y)*mscale;
+        if(pixelDraw)
+        {
+            entity_rect.x = ((int)(i -> getx() + 0.5f) - viewport_rect.x)*mscale;
+            //(entities are on flipped y axis!)
+            entity_rect.y = (cells.size() - (int)(i -> gety() + 0.5f) - viewport_rect.y)*mscale;
+        }
+        else{
+            entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
+            //(entities are on flipped y axis!)
+            entity_rect.y = (cells.size() - i -> gety() - viewport_rect.y)*mscale;
+        }
+        
         entity_rect.w = mscale;
         entity_rect.h = mscale;
+
+        if(i -> getname() == "player"){
+            entity_rect.w = mscale*2;
+            entity_rect.h = mscale*2;
+            entity_rect.x -= mscale;
+            entity_rect.y -= mscale;
+        }
         //printf("%d\n", entity_rect.x);
         SDL_SetRenderDrawColor(mrenderer, i -> mcolor.r, i -> mcolor.g, i -> mcolor.b, i -> mcolor.a);
         SDL_RenderFillRect(mrenderer, &entity_rect);

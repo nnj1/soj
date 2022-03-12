@@ -31,6 +31,8 @@ class Entity
         float mmass;
         float mtermvx;
         float mtermvy;
+        float mlastx;
+        float mlasty;
         
 
     public:
@@ -41,6 +43,8 @@ class Entity
 
         float getx() { return mx; }
         float gety() { return my; }
+        float getlastx() { return mlastx; }
+        float getlasty() { return mlasty; }
         float getvx() { return mvx; }
         float getvy() { return mvy; }
         float getax() { return max; }
@@ -50,8 +54,8 @@ class Entity
         float gettermvy() { return mtermvy; }
         float getmass() { return mmass; }
 
-        void setx(float x) { mx = x; }
-        void sety(float y) { my = y; }
+        void setx(float x) { mlastx = mx; mx = x; }
+        void sety(float y) { mlasty = my; my = y; }
         void setvx(float vx) { mvx = vx; }
         void setvy(float vy) { mvy = vy; }
         void setax(float ax) { max = ax; }
@@ -72,6 +76,8 @@ Entity::Entity(string name, float x = 0, float y = 0, float vx = 0.0, float vy =
     mname = name;
     mx = x;
     my = y;
+    mlastx = x;
+    mlasty = y;
     mvx = vx;
     mvy = vy;
     max = ax;

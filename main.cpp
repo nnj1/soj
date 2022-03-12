@@ -94,12 +94,12 @@ int main( int argc, char *argv[] ) {
   // engine 
   int width = 640;
   int height = 480;
-  int scale = 8;
+  int scale = 5;
 
   Engine* newengine = new Engine(renderer, width, height, scale);
 
   // player entitiy
-  Entity *player = new Entity("player", 50.0, 50.0, 0.0, 0.0, 0.0, 0.0, 2, 2, {255,0,0,255}, 10.0);
+  Entity *player = new Entity("player", 80.0, 40.0, 0.0, 0.0, 0.0, 0.0, 2, 2, {255,0,0,255}, 10.0);
 
   newengine -> addEntity(player);
 
@@ -153,6 +153,9 @@ int main( int argc, char *argv[] ) {
   bool camcon = true;
   bool shooting = false;
   int mouseX, mouseY; // stores position of mouse
+  float clickx, clicky;
+  float dx, dy;
+  float len;
 
   while (true)
   {
@@ -186,18 +189,18 @@ int main( int argc, char *argv[] ) {
           case SDLK_a:  player -> setax(0.0); player -> setvx(0.0); break;
           case SDLK_s:  player -> setay(0.0); player -> setvy(0.0); break;
           case SDLK_d:  player -> setax(0.0); player -> setvx(0.0); break;
+
         }
       }
 
       if (event.type == SDL_MOUSEBUTTONDOWN){
-        //int mouseX = event.motion.x;
-        //int mouseY = event.motion.y;
         switch (event.button.button)
         {
           case SDL_BUTTON_LEFT:
             {
-              printf("Left mouse button pressed at %d, %d. Pixel Coordinates %d, %d \n", mouseX, mouseY, (int) mouseX/scale, (int) mouseY/scale);
+              //printf("Left mouse button pressed at %d, %d. Pixel Coordinates %d, %d \n", mouseX, mouseY, (int) mouseX/scale, (int) mouseY/scale);
               shooting = true;
+
               break;
             }
             
@@ -217,6 +220,10 @@ int main( int argc, char *argv[] ) {
         {
           case SDL_BUTTON_LEFT:
             shooting = false;
+            player -> setay(0.0); 
+            player -> setvy(0.0);
+            player -> setax(0.0); 
+            player -> setvx(0.0);
             break;
 
           default:
@@ -226,7 +233,10 @@ int main( int argc, char *argv[] ) {
 
       if (event.type == SDL_MOUSEMOTION)
       {
-        SDL_GetMouseState(&mouseX, &mouseY);
+        //SDL_GetMouseState(&mouseX, &mouseY);
+        //printf("MOVED MOUSE\n");
+        mouseX = event.motion.x;
+        mouseY = event.motion.y;
       }
       
       if (event.type == SDL_QUIT)
@@ -241,24 +251,27 @@ int main( int argc, char *argv[] ) {
         // create new entity at position of the click
         //Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
         
-        // create new entity at player's position
-        Entity *bullet = new Entity("bullet", player -> getx(), player -> gety(), 0.0, 0.0, 0.0, 0.0, 1.5, 1.5, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 1);
+        // create new entity around player's position
+        Entity *bullet = new Entity("bullet", player -> getx() + rand()%2-1, player -> gety() + rand()%2-1, 0.0, 0.0, 0.0, 0.0, 1.5, 1.5, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 1);
 
         // get vectors to the direction of the click) (in pixels in normal coords)
-        float clickx = mouseX/scale + newengine -> getViewport_rect().x;
-        float clicky = newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y);
+        clickx = mouseX/scale + newengine -> getViewport_rect().x;
+        clicky = newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y);
 
         // get unit vectors from direction of click to player
-        float dx = clickx - player -> getx();
-        float dy = clicky - player -> gety();
+        dx = clickx - player -> getx();
+        dy = clicky - player -> gety();
 
-        float len = pow(pow(dx, 2) + pow(dy, 2), 0.5);
+        len = pow(pow(dx, 2) + pow(dy, 2), 0.5);
 
         //bullet -> shove(, );
         bullet -> setvx((dx + (rand()%10 - 5))/len);
         bullet -> setvy((dy + (rand()%10 - 5))/len);
         //printf("%f, %f\n", (dx + (rand()%10 - 5))/len, (dy + (rand()%10 - 5))/len);
         newengine -> addEntity(bullet);
+
+        // shove player in opposite direction of click
+        //player -> shove(-0.01 * dx/len, -0.01 * dy/len);
 
         /* ===========
         printf("created entity at %f, %f\n", bullet -> getx(), bullet -> gety());
