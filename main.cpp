@@ -92,7 +92,7 @@ int main( int argc, char *argv[] ) {
 
   SDL_Rect ammo_rect;
   ammo_rect.x = 2*scale;
-  ammo_rect.y = 6*scale;
+  ammo_rect.y = 6*scale; // dynamically adjust this!
   ammo_rect.w = 2*scale; 
   ammo_rect.h = 14*scale; // dynamically adjust this!
 
@@ -119,6 +119,9 @@ int main( int argc, char *argv[] ) {
   Uint32 initTime = SDL_GetTicks();
 
   Uint32 alpha = 0;
+
+  // ammo percentage
+  float ammo_percentage = 100;
 
   while (SDL_GetTicks() - initTime < 5000)
   { 
@@ -252,7 +255,7 @@ int main( int argc, char *argv[] ) {
       }
     }
 
-    if (shooting){
+    if (shooting && ammo_percentage > 0){
 
         // create new entity at position of the click
         //Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
@@ -285,6 +288,9 @@ int main( int argc, char *argv[] ) {
         for(auto & i : newengine -> getEntities()) 
           printf("%s %f, %f\n", i -> getname().c_str(), i -> getx(), i -> gety());
         //=========== */
+
+        // subtract some ammo percentage
+        ammo_percentage -= 0.1;
     }
 
     // CLEAR THE SCREEN
@@ -315,7 +321,8 @@ int main( int argc, char *argv[] ) {
     SDL_SetRenderDrawColor(renderer, 0, 125, 0, 255); 
     SDL_RenderFillRect(renderer, &stamina_rect);
 
-
+    ammo_rect.y = 6*scale + 14*scale * ((100-ammo_percentage) / 100);
+    ammo_rect.h = 14*scale - 14*scale * ((100-ammo_percentage) / 100); 
     SDL_SetRenderDrawColor(renderer, 64, 51, 138, 255); 
     SDL_RenderFillRect(renderer, &ammo_rect);
 
