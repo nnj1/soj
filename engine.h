@@ -57,7 +57,7 @@ class Engine
 
         // physics constants
         const float GRAVITY = -0.002;
-        const float elasticity = 0.999;
+        const float elasticity = 0.995;
 
 
         const bool pixelDraw = true;
@@ -253,16 +253,20 @@ void Engine::runPhysics(float deltat)
                 {
                     Entity *i = entities[j];
                     if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
+                        
                         // TODO: push object out of bounding box (1 pixel by 1 pixel)
                         //i -> setx(i -> getlastx());
                         //i -> sety(i -> getlasty());
 
                         // reflect velocities
                         i -> setvy(i -> getvy() * -1);
+                        //i -> setvy(0);
 
                         // TODO: drain energies depending on degree of inelasticity
                         i -> setvx(i -> getvx() * elasticity);
                         i -> setvy(i -> getvy() * elasticity);
+
+
                     }
                 }
             }
@@ -325,7 +329,7 @@ void Engine::runPhysics(float deltat)
 
                 */ 
 
-                //float elasticity = 0.99;// custom elasticity here
+                float elasticity = 0.995;// custom elasticity here
                 int lastx = (int) (b -> getlastx());
                 int lasty = (int) (b -> getlasty());
                 int ax = (int) (a -> getx());
@@ -334,16 +338,37 @@ void Engine::runPhysics(float deltat)
                 // head on horizantal collision
 
                 if(ax == lastx){
+                   
+                    /* TODO: push object out of bounding box (1 pixel by 1 pixel)
+                    a -> setx(a -> getlastx());
+                    a -> sety(a -> getlasty());
+                    b -> setx(b -> getlastx());
+                    b -> sety(b -> getlasty());*/
+
                     a -> setvx(a -> getvx() * -1 * elasticity);
                     b -> setvx(b -> getvx() * -1 * elasticity);
                 }
                 // head on vertical collision
                 if(ay == lasty){
+
+                    /* TODO: push object out of bounding box (1 pixel by 1 pixel)
+                    a -> setx(a -> getlastx());
+                    a -> sety(a -> getlasty());
+                    b -> setx(b -> getlastx());
+                    b -> sety(b -> getlasty());*/
+
                     a -> setvy(a -> getvy() * -1 * elasticity);
                     b -> setvy(b -> getvy() * -1 * elasticity);
                 }
                 // oblique collision
                 if(ay != lasty && ax != lastx){
+
+                    /* TODO: push object out of bounding box (1 pixel by 1 pixel)
+                    a -> setx(a -> getlastx());
+                    a -> sety(a -> getlasty());
+                    b -> setx(b -> getlastx());
+                    b -> sety(b -> getlasty());*/
+
                     a -> setvx(a -> getvx() * -1 * elasticity);
                     a -> setvy(a -> getvy() * -1 * elasticity);
                     b -> setvx(b -> getvx() * -1 * elasticity);

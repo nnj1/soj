@@ -63,7 +63,8 @@ int main( int argc, char *argv[] ) {
   // 640 x 480 (width and height) 
   int width = 640;
   int height = 480;
-  int scale = 5;
+  int scale = 8;
+  int scalehud = 5;
 
   // HUD Generation
 
@@ -75,26 +76,26 @@ int main( int argc, char *argv[] ) {
   // health bar
 
   SDL_Rect health_rect;
-  health_rect.x = 14*scale;
-  health_rect.y = 2*scale;
-  health_rect.w = 47*scale; // dynamically adjust this!
-  health_rect.h = 2*scale;
+  health_rect.x = 14*scalehud;
+  health_rect.y = 2*scalehud;
+  health_rect.w = 47*scalehud; // dynamically adjust this!
+  health_rect.h = 2*scalehud;
 
   // stamina bar
 
   SDL_Rect stamina_rect;
-  stamina_rect.x = 14*scale;
-  stamina_rect.y = 8*scale;
-  stamina_rect.w = 34*scale; // dynamically adjust this!
-  stamina_rect.h = 2*scale;
+  stamina_rect.x = 14*scalehud;
+  stamina_rect.y = 8*scalehud;
+  stamina_rect.w = 34*scalehud; // dynamically adjust this!
+  stamina_rect.h = 2*scalehud;
 
   // ammo bar
 
   SDL_Rect ammo_rect;
-  ammo_rect.x = 2*scale;
-  ammo_rect.y = 6*scale; // dynamically adjust this!
-  ammo_rect.w = 2*scale; 
-  ammo_rect.h = 14*scale; // dynamically adjust this!
+  ammo_rect.x = 2*scalehud;
+  ammo_rect.y = 6*scalehud; // dynamically adjust this!
+  ammo_rect.w = 2*scalehud; 
+  ammo_rect.h = 14*scalehud; // dynamically adjust this!
 
   // create custom mouse cursor
   SDL_Surface* cursorimage = IMG_Load("assets/cursor.png");
@@ -320,8 +321,8 @@ int main( int argc, char *argv[] ) {
     SDL_SetRenderDrawColor(renderer, 0, 125, 0, 255); 
     SDL_RenderFillRect(renderer, &stamina_rect);
 
-    ammo_rect.y = 6*scale + 14*scale * ((100-ammo_percentage) / 100);
-    ammo_rect.h = 14*scale - 14*scale * ((100-ammo_percentage) / 100); 
+    ammo_rect.y = 6*scalehud + 14*scalehud * ((100-ammo_percentage) / 100);
+    ammo_rect.h = 14*scalehud - 14*scalehud * ((100-ammo_percentage) / 100); 
     SDL_SetRenderDrawColor(renderer, 64, 51, 138, 255); 
     SDL_RenderFillRect(renderer, &ammo_rect);
 
