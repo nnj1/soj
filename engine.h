@@ -227,6 +227,7 @@ void Engine::solidColors()
 void Engine::runPhysics(float deltat)
 {
 
+
     // apply universal forces to certain entities
 
     for(int j = 0; j < entities.size(); j++) 
@@ -237,7 +238,7 @@ void Engine::runPhysics(float deltat)
             i -> setay(i -> getay() + GRAVITY); 
     }
 
-     // check if there's any collisions with map structural components
+    // check if there's any collisions with map structural components
 
     for(auto y = 0; y < cells.size(); ++y)
     {
@@ -252,11 +253,13 @@ void Engine::runPhysics(float deltat)
                 for(int j = 0; j < entities.size(); j++) 
                 {
                     Entity *i = entities[j];
-                    if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
+                    //if ((int)(i -> getx() + 0.5f) == pixelx && (int)(i -> gety() + 0.5f) == pixely){
+                    if ((int)(i -> getx() + 0.5f) == pixelx && i -> gety() < pixely + 1){
                         
                         // TODO: push object out of bounding box (1 pixel by 1 pixel)
                         //i -> setx(i -> getlastx());
                         //i -> sety(i -> getlasty());
+                        //i -> sety(pixely + 1);
 
                         // reflect velocities
                         i -> setvy(i -> getvy() * -1);
@@ -334,6 +337,8 @@ void Engine::runPhysics(float deltat)
                 int lasty = (int) (b -> getlasty());
                 int ax = (int) (a -> getx());
                 int ay = (int) (a -> gety());
+                int bx = (int) (b -> getx());
+                int by = (int) (b -> gety());
 
                 // head on horizantal collision
 
@@ -400,6 +405,37 @@ void Engine::runPhysics(float deltat)
         i -> setx(i -> getx() + (i -> getvx() * deltat));
         i -> sety(i -> gety() + (i -> getvy() * deltat));
 
+    }
+
+    // check to see if any particulate entities are standstill and just zero them out
+
+    for(int j = 0; j < entities.size(); j++) 
+    {
+        Entity *i = entities[j];
+
+        if (i -> getname() == "particle")
+            if (abs(i -> getx() - i -> getlastx()) < 0.00001 || abs(i -> gety() - i -> getlasty()) < 0.00001 ){
+                // kill velocities and forces
+                i -> setvx(0);
+                i -> setvy(0);
+                i -> setax(0);
+                i -> setay(0);
+                i -> standstill++;
+            }
+
+    }
+
+    // if anything particulate has been standstill for too long free the memory
+
+    if(entities.empty() == false) {
+        for(int i = entities.size() - 1; i >= 0; i--) {
+            if(entities.at(i) -> getname() == "particle" && entities.at(i) -> standstill > 100) {
+                Entity * bad = entities.at(i);
+                entities.erase( entities.begin() + i ); 
+                delete bad;
+                //printf(" was deleted\n");
+            }
+        }
     }
 
     // destroy bullet projectile if out of bounds OF THE MAP!

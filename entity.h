@@ -67,6 +67,7 @@ class Entity
         void shove(float fx, float fy) { max += fx / mmass; may += fy / mmass; }
 
         SDL_Color mcolor;
+        int standstill; // number of frames the entity has been standstill for
 
 };
 
@@ -86,6 +87,7 @@ Entity::Entity(string name, float x = 0, float y = 0, float vx = 0.0, float vy =
     mtermvy = termvy;
     mcolor = color;
     mmass = mass;
+    standstill = 0;
 }
 
 // Define the destructor.
