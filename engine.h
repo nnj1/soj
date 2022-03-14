@@ -9,6 +9,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <fstream>
+#include <map>
 
 #include <cstdlib>   // rand and srand
 #include <ctime>     // For the time function
@@ -59,8 +60,11 @@ class Engine
         const float GRAVITY = -0.002;
         const float elasticity = 0.995;
 
-
+        // setting for enabling virtual pixel by pixel drawing, as opposed to smooth
         const bool pixelDraw = true;
+
+        // will contain textures
+        map<char, SDL_Surface*> textures; 
 
     public:
 
@@ -471,18 +475,29 @@ void Engine::drawFrame()
 
             // get the color based on viewport offset (enables camera movement)!
             SDL_Color cex;
+            char key;
 
             try {
                 cex = cells.at(y + viewport_rect.y).at(x + viewport_rect.x);
+                key = mmap.at(y + viewport_rect.y).at(x + viewport_rect.x);
             }
             catch (const std::out_of_range& oor) {
                 //std::cerr << "Out of Range error: " << oor.what() << '\n';
                 // color out of rangle pixel red
                 cex = SDL_Color{225, 0,0, 225};
+                key = '\n';
             }
-            
-            SDL_SetRenderDrawColor(mrenderer, cex.r, cex.g, cex.b, cex.a); 
-            SDL_RenderFillRect(mrenderer, &pixel_rect);
+
+            // see if the key corresponds to a texture
+            if(textures.count(key))
+            {
+                printf("HAS KEY\n");
+            }
+            else
+            {
+                SDL_SetRenderDrawColor(mrenderer, cex.r, cex.g, cex.b, cex.a); 
+                SDL_RenderFillRect(mrenderer, &pixel_rect);
+            }
 
         }
     }
@@ -491,9 +506,10 @@ void Engine::drawFrame()
 
     for(auto & i : entities) 
     {
-        // generic entity object
+        // generic rect object for drawing
         SDL_Rect entity_rect;
-        if(pixelDraw and i -> getname() != "player")
+
+        if(pixelDraw and i -> getname() != "player") // if entity is player, scale it up
         {
             entity_rect.x = ((int)(i -> getx() + 0.5f) - viewport_rect.x)*mscale;
             //(entities are on flipped y axis!)
@@ -550,27 +566,29 @@ void Engine::loadMap(string filename)
     {
         for(auto x = 0; x < mmap.at(y).size(); ++x) {
             
-            if(mmap.at(y).at(x) == 'G'){
+            char key = mmap.at(y).at(x);
+
+            if(key == 'G'){
                 cells.at(y).at(x).r = 0;
                 cells.at(y).at(x).g = 255;
                 cells.at(y).at(x).b = 0;
                 cells.at(y).at(x).a = 255;
             }
-            else if(mmap.at(y).at(x) == 'W'){
+            else if(key == 'W'){
                 cells.at(y).at(x).r = 0;
                 cells.at(y).at(x).g = 0;
                 cells.at(y).at(x).b = 255;
                 cells.at(y).at(x).a = 255;
             }
             // color brick walls brown
-            else if (mmap.at(y).at(x) == 'B'){
+            else if (key == 'B'){
                 cells.at(y).at(x).r = 255;
                 cells.at(y).at(x).g = 255;
                 cells.at(y).at(x).b = 0;
                 cells.at(y).at(x).a = 255;
             }
             // color all else black
-            else if (mmap.at(y).at(x) != ' '){
+            else if (key != ' '){
                 cells.at(y).at(x).r = 255;
                 cells.at(y).at(x).g = 255;
                 cells.at(y).at(x).b = 240;
@@ -583,8 +601,15 @@ void Engine::loadMap(string filename)
                 cells.at(y).at(x).b = 0;
                 cells.at(y).at(x).a = 255;
             }
+
+            if (static_cast<bool>(ifstream("./textures/" + to_string(key) + ".png"))){
+                printf("Found texture for %c!\n", key);
+                textures[key] = IMG_Load(("./textures/" + to_string(key) + ".png").c_str());
+            }
         }
     }
+
+
 
     printf("Loaded map that's %lu x %lu cells\n", cells[0].size(), cells.size());
 
