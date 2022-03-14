@@ -68,7 +68,9 @@ class Entity
 
         SDL_Color mcolor;
         int standstill; // number of frames the entity has been standstill for
-
+        float scalemod; // contains a multiplier for scale during drawing routines
+        bool collisions; // lets us know if objects of this entity collide with each other
+        
 };
 
 // Engine constructor
@@ -88,6 +90,8 @@ Entity::Entity(string name, float x = 0, float y = 0, float vx = 0.0, float vy =
     mcolor = color;
     mmass = mass;
     standstill = 0;
+    scalemod = 0.5;
+    collisions = false;
 }
 
 // Define the destructor.

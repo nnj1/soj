@@ -61,7 +61,7 @@ class Engine
         const float elasticity = 0.995;
 
         // setting for enabling virtual pixel by pixel drawing, as opposed to smooth
-        const bool pixelDraw = true;
+        const bool pixelDraw = false;
 
         // will contain textures
         map<char, SDL_Surface*> textures; 
@@ -325,7 +325,8 @@ void Engine::runPhysics(float deltat)
             Entity *a = entities[j];
             Entity *b = entities[k];
 
-            if (a -> getname() == "bullet" && a -> getname() == "bullet"
+            if (a -> collisions && b -> collisions
+                && a -> getname() == "bullet" && b -> getname() == "bullet"
                 && (int)(a -> getx() + 0.5f) == (int)(b -> getx() + 0.5f)
                 && (int)(a -> gety() + 0.5f) == (int)(b -> gety() + 0.5f)){
                 /* determine the type of collision
@@ -463,6 +464,8 @@ void Engine::drawFrame()
 
     // draw background
 
+    SDL_Surface * composition = SDL_CreateRGBSurface(SDL_SWSURFACE,mwidth,mheight,32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+
     for(auto y = 0; y < (int) mheight/mscale; ++y)
     {
         for(auto x = 0; x < (int) mwidth/mscale; ++x) {
@@ -491,7 +494,10 @@ void Engine::drawFrame()
             // see if the key corresponds to a texture
             if(textures.count(key))
             {
-                printf("HAS KEY\n");
+                SDL_BlitSurface(textures[key],
+                    NULL,
+                    composition,
+                    &pixel_rect);
             }
             else
             {
@@ -501,6 +507,12 @@ void Engine::drawFrame()
 
         }
     }
+
+    SDL_Texture * compositiontexture = SDL_CreateTextureFromSurface(mrenderer, composition);
+    SDL_RenderCopy(mrenderer, compositiontexture, NULL, NULL);
+    SDL_FreeSurface(composition);
+    SDL_DestroyTexture(compositiontexture);
+
 
     // draw entities (to nearest pixel (or not))
 
@@ -521,8 +533,8 @@ void Engine::drawFrame()
             entity_rect.y = (cells.size() - i -> gety() - viewport_rect.y)*mscale;
         }
         
-        entity_rect.w = mscale;
-        entity_rect.h = mscale;
+        entity_rect.w = mscale * i -> scalemod;
+        entity_rect.h = mscale * i -> scalemod;
 
         if(i -> getname() == "player"){
             entity_rect.w = mscale*2;
@@ -602,14 +614,11 @@ void Engine::loadMap(string filename)
                 cells.at(y).at(x).a = 255;
             }
 
-            if (static_cast<bool>(ifstream("./textures/" + to_string(key) + ".png"))){
-                printf("Found texture for %c!\n", key);
-                textures[key] = IMG_Load(("./textures/" + to_string(key) + ".png").c_str());
+            if (static_cast<bool>(ifstream("./textures/" + (string() + key) + ".png"))){
+                textures[key] = IMG_Load(("./textures/" + (string() + key) + ".png").c_str());
             }
         }
     }
-
-
 
     printf("Loaded map that's %lu x %lu cells\n", cells[0].size(), cells.size());
 

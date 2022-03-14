@@ -63,7 +63,7 @@ int main( int argc, char *argv[] ) {
   // 640 x 480 (width and height) 
   int width = 640;
   int height = 480;
-  int scale = 8;
+  int scale = 16;
   int scalehud = 5;
 
   // HUD Generation
@@ -261,7 +261,7 @@ int main( int argc, char *argv[] ) {
         //Entity *bullet = new Entity("bullet", mouseX/scale + newengine -> getViewport_rect().x, newengine -> cells.size() - (mouseY/scale + newengine -> getViewport_rect().y), 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 10.0);
         
         // create new entity around player's position
-        Entity *bullet = new Entity("bullet", player -> getx() + rand()%2-1, player -> gety() + rand()%2-1, 0.0, 0.0, 0.0, 0.0, 1.5, 1.5, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 1);
+        Entity *bullet = new Entity("bullet", player -> getx() + 0.5*(rand()%2-1), player -> gety() + 0.5*(rand()%2-1), 0.0, 0.0, 0.0, 0.0, 1.5, 1.5, {static_cast<Uint8>(rand()%255), static_cast<Uint8> (rand()%255), static_cast<Uint8> (rand()%255), 255}, 1);
 
         // get vectors to the direction of the click) (in pixels in normal coords)
         clickx = mouseX/scale + newengine -> getViewport_rect().x;
@@ -274,8 +274,8 @@ int main( int argc, char *argv[] ) {
         len = pow(pow(dx, 2) + pow(dy, 2), 0.5);
 
         //bullet -> shove(, );
-        bullet -> setvx((dx + (rand()%10 - 5))/len);
-        bullet -> setvy((dy + (rand()%10 - 5))/len);
+        bullet -> setvx((dx + (rand()%5 - 2.5))/len);
+        bullet -> setvy((dy + (rand()%5 - 2.5))/len);
         //printf("%f, %f\n", (dx + (rand()%10 - 5))/len, (dy + (rand()%10 - 5))/len);
         newengine -> addEntity(bullet);
 
