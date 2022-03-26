@@ -63,7 +63,7 @@ int main( int argc, char *argv[] ) {
   // 640 x 480 (width and height) 
   int width = 640;
   int height = 480;
-  int scale = 16;
+  int scale = 10;
   int scalehud = 5;
 
   // HUD Generation
@@ -290,7 +290,7 @@ int main( int argc, char *argv[] ) {
         //=========== */
 
         // subtract some ammo percentage
-        ammo_percentage -= 0.1;
+        ammo_percentage -= 0.05;
     }
 
     // CLEAR THE SCREEN

@@ -58,7 +58,7 @@ class Engine
 
         // physics constants
         const float GRAVITY = -0.002;
-        const float elasticity = 0.995;
+        const float elasticity = 0.85;
 
         // setting for enabling virtual pixel by pixel drawing, as opposed to smooth
         const bool pixelDraw = false;
@@ -261,8 +261,8 @@ void Engine::runPhysics(float deltat)
                     if ((int)(i -> getx() + 0.5f) == pixelx && i -> gety() < pixely + 1){
                         
                         // TODO: push object out of bounding box (1 pixel by 1 pixel)
-                        //i -> setx(i -> getlastx());
-                        //i -> sety(i -> getlasty());
+                        i -> setx(i -> getlastx());
+                        i -> sety(i -> getlasty());
                         //i -> sety(pixely + 1);
 
                         // reflect velocities
@@ -349,11 +349,11 @@ void Engine::runPhysics(float deltat)
 
                 if(ax == lastx){
                    
-                    /* TODO: push object out of bounding box (1 pixel by 1 pixel)
+                    // TODO: push object out of bounding box (1 pixel by 1 pixel)
                     a -> setx(a -> getlastx());
                     a -> sety(a -> getlasty());
                     b -> setx(b -> getlastx());
-                    b -> sety(b -> getlasty());*/
+                    b -> sety(b -> getlasty());
 
                     a -> setvx(a -> getvx() * -1 * elasticity);
                     b -> setvx(b -> getvx() * -1 * elasticity);
@@ -361,11 +361,11 @@ void Engine::runPhysics(float deltat)
                 // head on vertical collision
                 if(ay == lasty){
 
-                    /* TODO: push object out of bounding box (1 pixel by 1 pixel)
+                    // TODO: push object out of bounding box (1 pixel by 1 pixel)
                     a -> setx(a -> getlastx());
                     a -> sety(a -> getlasty());
                     b -> setx(b -> getlastx());
-                    b -> sety(b -> getlasty());*/
+                    b -> sety(b -> getlasty());
 
                     a -> setvy(a -> getvy() * -1 * elasticity);
                     b -> setvy(b -> getvy() * -1 * elasticity);
@@ -373,11 +373,11 @@ void Engine::runPhysics(float deltat)
                 // oblique collision
                 if(ay != lasty && ax != lastx){
 
-                    /* TODO: push object out of bounding box (1 pixel by 1 pixel)
+                    // TODO: push object out of bounding box (1 pixel by 1 pixel)
                     a -> setx(a -> getlastx());
                     a -> sety(a -> getlasty());
                     b -> setx(b -> getlastx());
-                    b -> sety(b -> getlasty());*/
+                    b -> sety(b -> getlasty());
 
                     a -> setvx(a -> getvx() * -1 * elasticity);
                     a -> setvy(a -> getvy() * -1 * elasticity);
@@ -427,6 +427,16 @@ void Engine::runPhysics(float deltat)
                 i -> setay(0);
                 i -> standstill++;
             }
+        
+        if (i -> getname() == "bullet")
+            if (abs(i -> getx() - i -> getlastx()) < 0.001 || abs(i -> gety() - i -> getlasty()) < 0.001 ){
+                // kill velocities and forces
+                i -> setvx(0);
+                i -> setvy(0);
+                i -> setax(0);
+                i -> setay(0);
+                i -> standstill++;
+            }
 
     }
 
@@ -435,6 +445,18 @@ void Engine::runPhysics(float deltat)
     if(entities.empty() == false) {
         for(int i = entities.size() - 1; i >= 0; i--) {
             if(entities.at(i) -> getname() == "particle" && entities.at(i) -> standstill > 100) {
+                Entity * bad = entities.at(i);
+                entities.erase( entities.begin() + i ); 
+                delete bad;
+                //printf(" was deleted\n");
+            }
+        }
+    }
+
+    // delete standstill bullets
+    if(entities.empty() == false) {
+        for(int i = entities.size() - 1; i >= 0; i--) {
+            if(entities.at(i) -> getname() == "bullet" && entities.at(i) -> standstill > 100) {
                 Entity * bad = entities.at(i);
                 entities.erase( entities.begin() + i ); 
                 delete bad;
@@ -523,9 +545,9 @@ void Engine::drawFrame()
 
         if(pixelDraw and i -> getname() != "player") // if entity is player, scale it up
         {
-            entity_rect.x = ((int)(i -> getx() + 0.5f) - viewport_rect.x)*mscale;
+            entity_rect.x = ((i -> getx() + 0.5f) - viewport_rect.x)*mscale;
             //(entities are on flipped y axis!)
-            entity_rect.y = (cells.size() - (int)(i -> gety() + 0.5f) - viewport_rect.y)*mscale;
+            entity_rect.y = (cells.size() - (i -> gety() + 0.5f) - viewport_rect.y)*mscale;
         }
         else{
             entity_rect.x = (i -> getx() - viewport_rect.x)*mscale;
